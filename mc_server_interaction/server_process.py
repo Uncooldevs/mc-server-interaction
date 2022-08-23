@@ -1,6 +1,3 @@
-import subprocess
-import time
-from threading import Thread
 from typing import List, Callable
 
 import psutil
