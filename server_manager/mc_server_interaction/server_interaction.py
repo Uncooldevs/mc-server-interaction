@@ -23,6 +23,8 @@ class MinecraftServer:
         self.server_config = server_config
 
         self._status = ServerStatus.STOPPED
+        self.process = None
+        self._mcstatus_server = None
 
         self.load_properties()
 
