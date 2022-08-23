@@ -25,6 +25,7 @@ class ServerStatus(Enum):
     STARTING = auto
     STOPPING = auto
     INSTALLING = auto
+    NOT_INSTALLED = auto
 
 
 @dataclass
@@ -35,3 +36,16 @@ class Player:
     is_banned: Optional[bool] = False
     ban_reason: Optional[str] = None
     ban_since: Optional[str] = None
+
+
+@dataclass
+class ServerConfig:
+    path: str
+    ram: int
+    version: str
+    created_at: int
+    installed: bool
+
+
+class DirectoryNotEmptyException(Exception):
+    pass
