@@ -44,7 +44,6 @@ class ServerConfig:
     ram: int
     version: str
     created_at: int
-    installed: bool
 
 
 class DirectoryNotEmptyException(Exception):
