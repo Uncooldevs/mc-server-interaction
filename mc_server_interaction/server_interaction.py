@@ -4,8 +4,9 @@ from threading import Thread
 from typing import Optional
 
 from mcstatus import JavaServer
+from cached_property import cached_property_with_ttl
 
-from mc_server_interaction.models import HardwareConfig, PathConfig, ServerStatus
+from mc_server_interaction.models import HardwareConfig, PathConfig, ServerStatus, Player
 from mc_server_interaction.server_process import ServerProcess
 from mc_server_interaction.property_handler import ServerProperties
 
@@ -16,6 +17,7 @@ class MinecraftServer:
     path_data: PathConfig
     _status: ServerStatus
     _properties: ServerProperties
+    _mcstatus_server: JavaServer
 
     def __init__(self, hardware_config: HardwareConfig, path_data: PathConfig):
         self.hardware_config = hardware_config
@@ -57,9 +59,20 @@ class MinecraftServer:
     def get_status(self) -> ServerStatus:
         return self._status
 
+    @cached_property_with_ttl(ttl=5)
     def get_system_load(self):
         if self.is_running():
             return self.process.get_resource_usage()
+
+    @cached_property_with_ttl(ttl=10)
+    def get_players(self):
+        players = []
+        online_players = self._mcstatus_server.query().players.names
+        for player in online_players:
+            player = Player(player)
+            player.is_online = True
+            players.append(player)
+        return players
 
     def send_command(self, command: str):
         if self.is_online():
