@@ -6,7 +6,7 @@ from typing import Optional
 from mcstatus import JavaServer
 from cached_property import cached_property_with_ttl
 
-from server_manager.mc_server_interaction.Exceptions import ServerAlreadyRunningException, ServerNotInstalledException
+from server_manager.mc_server_interaction.exceptions import ServerAlreadyRunningException, ServerNotInstalledException
 from server_manager.mc_server_interaction.models import ServerStatus, Player, ServerConfig
 from server_manager.mc_server_interaction.server_process import ServerProcess
 from server_manager.mc_server_interaction.property_handler import ServerProperties
@@ -17,7 +17,7 @@ class MinecraftServer:
     server_config: ServerConfig
     _status: ServerStatus
     _properties: ServerProperties
-    _mcstatus_server: JavaServer
+    _mcstatus_server: Optional[JavaServer]
 
     def __init__(self, server_config: ServerConfig):
         self.server_config = server_config
@@ -117,4 +117,3 @@ class MinecraftServer:
             if "ThreadedAnvilChunkStorage: All dimensions are saved" in output:
                 self._mcstatus_server = None
                 self._status = ServerStatus.STOPPED
-

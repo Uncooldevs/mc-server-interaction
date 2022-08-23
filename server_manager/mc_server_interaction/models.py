@@ -1,5 +1,6 @@
+import time
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import Enum
 from typing import Optional
 
 
@@ -25,6 +26,8 @@ class Player:
 @dataclass
 class ServerConfig:
     path: str
-    ram: int
+    name: str
     version: str
-    created_at: float
+    ram: int = 2048
+    created_at: float = time.time()
+

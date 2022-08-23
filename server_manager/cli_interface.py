@@ -6,9 +6,12 @@ from server_manager.server_manger import ServerManager
 def main():
     parser = ArgumentParser(description='Server Manager')
 
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands', help='additional help', dest='subparser')
 
-    parser.add_argument("--create", help="Create a new server", action="store_true")
+    create = subparsers.add_parser("create", help="Create a new server")
+    create.add_argument("--name", "-n", help="Name of the server", required=False)
+    create.add_argument("--path", "-p", help="Path to the server", required=False)
+    create.add_argument("--version", "-v", help="Version of the server", required=False)
 
     server_action = subparsers.add_parser("server", help="Server action")
     server_action.add_argument("sid", help="Sid of the server. Run `manager list` to get the sid")
@@ -29,18 +32,21 @@ def main():
             print(f"{sid}: {server.name}")
             return
 
-    elif args.create:
-        path = input("Enter path to server directory: ")
-        version = input("Enter server version: ")
-        name = input("Enter server name: ")
+    elif args.subparser == "create":
+        if not args.path:
+            args.path = input("Enter path to server directory: ")
+        if not args.version:
+            args.version = input("Enter server version: ")
+        if not args.name:
+            args.name = input("Enter server name: ")
 
-        server_manager.create_new_server(name, path, version)
+        server_manager.create_new_server(args.name, args.path, args.version)
         return
 
     elif args.subparser == "server":
         server = server_manager.get_server(args.sid)
         print(f"""
-        Path: {server.path_data.base_path}
+        Path: {server.server_config.path}
         Status: {server.get_status().name}
         """)
         return
