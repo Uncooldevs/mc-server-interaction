@@ -4,6 +4,8 @@ import os
 import json
 import datetime
 
+from server_manager.mc_server_interaction.Exceptions import UnsupportedVersionException
+
 
 class AvailableMinecraftServerVersions:
 
@@ -51,7 +53,11 @@ class AvailableMinecraftServerVersions:
             json.dump(data, f, indent=4)
 
     def get_download_link(self, version: str):
-        url = self.available_versions[version]
+        if version == "latest":
+            version = self.available_versions[0]
+        url = self.available_versions.get(version)
+        if url is None:
+            raise UnsupportedVersionException()
         webpage = self._get_webpage(url)
         soup = BeautifulSoup(webpage, "html.parser")
         download_button = soup.find("a", text="Download Server Jar")
