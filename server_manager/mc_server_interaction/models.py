@@ -43,8 +43,4 @@ class ServerConfig:
     path: str
     ram: int
     version: str
-    created_at: int
-
-
-class DirectoryNotEmptyException(Exception):
-    pass
+    created_at: float
