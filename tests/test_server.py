@@ -1,9 +1,7 @@
 import os
 import time
 
-import pytest
-
-from mc_server_interaction import MinecraftServer, ServerStatus, HardwareConfig, PathConfig
+from server_manager.mc_server_interaction import MinecraftServer, HardwareConfig, PathConfig
 
 
 def print_console(output: str):

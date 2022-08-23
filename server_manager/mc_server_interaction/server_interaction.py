@@ -6,9 +6,9 @@ from typing import Optional
 from mcstatus import JavaServer
 from cached_property import cached_property_with_ttl
 
-from mc_server_interaction.models import HardwareConfig, PathConfig, ServerStatus, Player
-from mc_server_interaction.server_process import ServerProcess
-from mc_server_interaction.property_handler import ServerProperties
+from server_manager.mc_server_interaction.models import HardwareConfig, PathConfig, ServerStatus, Player
+from server_manager.mc_server_interaction.server_process import ServerProcess
+from server_manager.mc_server_interaction.property_handler import ServerProperties
 
 
 class MinecraftServer:
