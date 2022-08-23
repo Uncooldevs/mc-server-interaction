@@ -30,8 +30,10 @@ class MinecraftServer:
 
     def load_properties(self):
         properties_file = os.path.join(self.server_config.path, "server.properties")
-        self._properties = ServerProperties(properties_file)
-
+        if os.path.isfile(properties_file):
+            self._properties = ServerProperties(properties_file)
+        else:
+            self._properties = None
     def save_properties(self):
         self._properties.save()
 
