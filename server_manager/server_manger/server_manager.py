@@ -55,8 +55,6 @@ class ServerManager:
                     f.write(resp.content)
                 shutil.copy(f"cache/minecraft_server_{version}.jar", os.path.join(path, "server.jar"))
 
-        subprocess.call("java -jar server.jar --nogui".split(), cwd=path)
-
         self.config.increment_sid()
         config = ServerConfig(path=path, created_at=time.time(), version=version, name=name)
         self.config.add_server(self.config.get_latest_sid(), config)

@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 
@@ -7,6 +8,8 @@ class ServerProperties:
     def __init__(self, file_name: str):
         self.file_name = file_name
         self.__data = {}
+        if not os.path.exists(file_name):
+            return
         with open(file_name, "r", encoding="utf-8") as f:
             for i in f:
                 if i.startswith("#"):
