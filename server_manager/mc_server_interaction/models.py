@@ -3,29 +3,13 @@ from enum import Enum, auto
 from typing import Optional
 
 
-@dataclass
-class HardwareConfig:
-    ram: int
-
-
-@dataclass
-class PathConfig:
-    base_path: str
-    jar_path: str
-
-
-@dataclass
-class MinecraftServerNetworkConfig:
-    port: int
-
-
 class ServerStatus(Enum):
-    RUNNING = auto
-    STOPPED = auto
-    STARTING = auto
-    STOPPING = auto
-    INSTALLING = auto
-    NOT_INSTALLED = auto
+    STOPPED = 0
+    RUNNING = 1
+    STARTING = 2
+    STOPPING = 3
+    INSTALLING = 4
+    NOT_INSTALLED = 5
 
 
 @dataclass
