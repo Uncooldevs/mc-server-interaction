@@ -1,1 +1,2 @@
-from .server_interaction import MinecraftServer, ServerStatus, HardwareConfig, PathConfig
+from .server_interaction import MinecraftServer
+from .models import ServerConfig, ServerStatus
