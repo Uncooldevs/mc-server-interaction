@@ -14,3 +14,7 @@ class ServerNotInstalledException(MCServerInteractionException):
 
 class ServerAlreadyRunningException(MCServerInteractionException):
     pass
+
+
+class UnsupportedVersionException(MCServerInteractionException):
+    pass
