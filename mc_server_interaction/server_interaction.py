@@ -3,7 +3,7 @@ from threading import Thread
 from typing import Optional
 
 from mc_server_interaction.models import HardwareConfig, PathConfig, ServerStatus
-from mc_server_interaction.process_handler import ServerProcess
+from mc_server_interaction.server_process import ServerProcess
 
 
 class MinecraftServer:
