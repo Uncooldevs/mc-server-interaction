@@ -6,29 +6,28 @@ from typing import Optional
 from mcstatus import JavaServer
 from cached_property import cached_property_with_ttl
 
-from server_manager.mc_server_interaction.models import HardwareConfig, PathConfig, ServerStatus, Player
+from server_manager.mc_server_interaction.Exceptions import ServerAlreadyRunningException, ServerNotInstalledException
+from server_manager.mc_server_interaction.models import ServerStatus, Player, ServerConfig
 from server_manager.mc_server_interaction.server_process import ServerProcess
 from server_manager.mc_server_interaction.property_handler import ServerProperties
 
 
 class MinecraftServer:
     process: Optional[ServerProcess]
-    hardware_config: HardwareConfig
-    path_data: PathConfig
+    server_config: ServerConfig
     _status: ServerStatus
     _properties: ServerProperties
     _mcstatus_server: JavaServer
 
-    def __init__(self, hardware_config: HardwareConfig, path_data: PathConfig):
-        self.hardware_config = hardware_config
-        self.path_data = path_data
+    def __init__(self, server_config: ServerConfig):
+        self.server_config = server_config
 
         self._status = ServerStatus.STOPPED
 
         self.load_properties()
 
     def load_properties(self):
-        properties_file = os.path.join(self.path_data.base_path, "server.properties")
+        properties_file = os.path.join(self.server_config.path, "server.properties")
         self._properties = ServerProperties(properties_file)
 
     def save_properties(self):
@@ -37,10 +36,18 @@ class MinecraftServer:
     def get_properties(self) -> ServerProperties:
         return self._properties
 
+    def set_status(self, status: ServerStatus):
+        self._status = status
+
     def start(self):
-        command = ["java", f"-Xmx{self.hardware_config.ram}M", f"-Xms{self.hardware_config.ram}M", "-jar",
-                   self.path_data.jar_path, "--nogui"]
-        self.process = ServerProcess(command, cwd=self.path_data.base_path, stdin=subprocess.PIPE,
+        if self.is_running():
+            raise ServerAlreadyRunningException()
+        if self._status == ServerStatus.NOT_INSTALLED or self._status == ServerStatus.INSTALLING:
+            raise ServerNotInstalledException()
+        jar_path = os.path.join(self.server_config.path, "server.jar")
+        command = ["java", f"-Xmx{self.server_config.ram}M", f"-Xms{self.server_config.ram}M", "-jar",
+                   jar_path, "--nogui"]
+        self.process = ServerProcess(command, cwd=self.server_config.path, stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT, universal_newlines=True
                                      )
