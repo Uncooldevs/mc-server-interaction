@@ -6,14 +6,15 @@ from typing import Dict
 
 import requests
 
+from .models import WorldGenerationSettings
 from .utils import AvailableMinecraftServerVersions
 from .data_store import ManagerDataStore
-from server_manager.mc_server_interaction import MinecraftServer, ServerConfig
+from server_manager.mc_server_interaction import MinecraftServer
 from server_manager.mc_server_interaction.exceptions import DirectoryNotEmptyException, ServerAlreadyRunningException
-from server_manager.mc_server_interaction.models import WorldGenerationSettings
-
+from ..mc_server_interaction.models import ServerConfig
 
 logger = getLogger("ServerManager")
+
 
 class ServerManager:
     available_versions = AvailableMinecraftServerVersions()
@@ -31,6 +32,10 @@ class ServerManager:
 
     def stop_server(self, sid):
         self._servers.get(sid).start()
+
+    def stop_all_servers(self):
+        for server in self._servers.values():
+            server.stop()
 
     def get_servers(self):
         return self._servers

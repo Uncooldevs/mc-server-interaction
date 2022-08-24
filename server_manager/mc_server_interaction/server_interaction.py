@@ -73,6 +73,8 @@ class MinecraftServer:
         if self.is_online:
             self._send_command("stop")
             self._status = ServerStatus.STOPPING
+        else:
+            logger.info("Server is not running")
 
     def kill(self):
         if self.is_running:

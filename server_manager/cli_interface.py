@@ -6,6 +6,7 @@ menu = """
 1. Create Server
 2. List available Servers
 3. Show server info
+4. Exit App
 """
 
 logging.basicConfig(
@@ -18,6 +19,7 @@ class Options:
     CREATE = 1
     LIST = 2
     SHOW = 3
+    EXIT = 4
 
 
 def main():
@@ -28,9 +30,6 @@ def main():
             input_text = int(input("Select option: "))
         except ValueError:
             print("Not a valid input")
-            continue
-        if input_text not in list(range(1, 4)):
-            print("Selected option does not exist")
             continue
 
         if input_text == Options.LIST:
@@ -96,7 +95,9 @@ Status: {server.get_status().name}
                     break
                 elif user_input == "3":
                     break
-
+        elif input_text == Options.EXIT:
+            server_manager.stop_all_servers()
+            break
 
 if __name__ == '__main__':
     main()

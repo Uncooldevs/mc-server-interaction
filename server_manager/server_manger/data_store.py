@@ -3,7 +3,7 @@ import os
 from logging import getLogger
 from typing import Dict
 
-from server_manager.mc_server_interaction import ServerConfig
+from server_manager.mc_server_interaction.models import ServerConfig
 
 logger = getLogger("DataStore")
 
