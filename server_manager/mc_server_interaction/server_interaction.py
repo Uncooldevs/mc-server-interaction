@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+from logging import getLogger
 from threading import Thread
 from typing import Optional, Union
 from datetime import datetime
@@ -13,6 +14,8 @@ from server_manager.mc_server_interaction.models import ServerStatus, Player, Se
 from server_manager.mc_server_interaction.server_process import ServerProcess
 from server_manager.mc_server_interaction.property_handler import ServerProperties
 
+
+logger = getLogger("MinecraftServer")
 
 class MinecraftServer:
     process: Optional[ServerProcess]
@@ -52,6 +55,9 @@ class MinecraftServer:
         if self._status == ServerStatus.NOT_INSTALLED or self._status == ServerStatus.INSTALLING:
             raise ServerNotInstalledException()
         jar_path = os.path.join(self.server_config.path, "server.jar")
+        if not os.path.exists(jar_path):
+            raise FileNotFoundError()
+        logger.info("Starting server")
         command = ["java", f"-Xmx{self.server_config.ram}M", f"-Xms{self.server_config.ram}M", "-jar",
                    jar_path, "--nogui"]
         self.process = ServerProcess(command, cwd=self.server_config.path, stdin=subprocess.PIPE,
@@ -60,6 +66,7 @@ class MinecraftServer:
                                      )
         self.process.callbacks.stdout.add_callback(self._update_status_callback)
         self._start_process_loop()
+        logger.info("Start event loop")
         self._status = ServerStatus.STARTING
 
     def stop(self):

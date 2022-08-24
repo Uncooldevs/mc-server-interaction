@@ -13,6 +13,7 @@ class ManagerDataStore:
     _servers: Dict[str, ServerConfig]
     data_file = "manager_data.json"
     _latest_sid: int = 0
+    server_data_dir = os.path.abspath("./servers")
 
     def __init__(self):
         self._servers = {}
@@ -48,8 +49,9 @@ class ManagerDataStore:
                 return
 
             self._latest_sid = data.get("latest_sid", 0)
+            self.server_data_dir = data.get("server_data_dir", self.server_data_dir)
 
-            for sid, config in data["servers"].items():
+            for sid, config in data.get("servers", {}).items():
                 try:
                     self._servers[sid] = ServerConfig(**config)
                 except Exception as e:
@@ -59,4 +61,6 @@ class ManagerDataStore:
         with open(self.data_file, "w") as f:
             json.dump({
                 "servers": {sid: config.__dict__ for sid, config in self._servers.items()},
+                "latest_sid": self._latest_sid,
+                "server_data_dir": self.server_data_dir
             }, f, indent=4)
