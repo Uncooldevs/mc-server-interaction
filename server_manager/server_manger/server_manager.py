@@ -1,6 +1,5 @@
 import os
 import shutil
-import subprocess
 import time
 from logging import getLogger
 from typing import Dict
@@ -11,6 +10,8 @@ from .utils import AvailableMinecraftServerVersions
 from .data_store import ManagerDataStore
 from server_manager.mc_server_interaction import MinecraftServer, ServerConfig
 from server_manager.mc_server_interaction.exceptions import DirectoryNotEmptyException
+from server_manager.mc_server_interaction.models import WorldGenerationSettings
+
 
 logger = getLogger("ServerManager")
 
@@ -58,9 +59,25 @@ class ServerManager:
         self.config.increment_sid()
         config = ServerConfig(path=path, created_at=time.time(), version=version, name=name)
         self.config.add_server(self.config.get_latest_sid(), config)
-        self._servers[self.config.get_latest_sid()] = MinecraftServer(
-            config
-        )
+        server = MinecraftServer(config)
+        self._servers[self.config.get_latest_sid()] = server
+
+        # TODO interface for world generator settings
+        world_generator_settings = WorldGenerationSettings()
+
+        for name, value in world_generator_settings:
+            server.properties.set(name, value)
+
+        server.properties.save()
+
+        logger.info("Write eula file")
+        with open(os.path.join(path, "eula.txt"), "w") as f:
+            f.write("eula=true")
+
+        logger.info("Starting server to generate all files...")
+
+        server.start()
 
     def get_server(self, sid) -> MinecraftServer:
         return self._servers.get(sid)
+

@@ -39,7 +39,7 @@ def main():
             args.version = input("Enter server version: ")
         if not args.name:
             args.name = input("Enter server name: ")
-
+        print("Creating server...")
         server_manager.create_new_server(args.name, args.path, args.version)
         return
 

@@ -16,7 +16,7 @@ class MinecraftServer:
     process: Optional[ServerProcess]
     server_config: ServerConfig
     _status: ServerStatus
-    _properties: ServerProperties
+    properties: ServerProperties
     _mcstatus_server: Optional[JavaServer]
 
     def __init__(self, server_config: ServerConfig):
@@ -30,16 +30,16 @@ class MinecraftServer:
 
     def load_properties(self):
         properties_file = os.path.join(self.server_config.path, "server.properties")
-        self._properties = ServerProperties(properties_file)
+        self.properties = ServerProperties(properties_file)
 
     def save_properties(self):
-        self._properties.save()
+        self.properties.save()
 
     def get_properties(self) -> ServerProperties:
-        return self._properties
+        return self.properties
 
     def set_property(self, key: str, value: Union[str, int, float, bool]):
-        self._properties.set(key, value)
+        self.properties.set(key, value)
 
     def set_status(self, status: ServerStatus):
         self._status = status
@@ -80,7 +80,7 @@ class MinecraftServer:
 
     @cached_property_with_ttl(ttl=10)
     def get_players(self):
-        if not self._properties.get("enable-query"):
+        if not self.properties.get("enable-query"):
             return []
         players = []
         online_players = self._mcstatus_server.query().players.names
@@ -114,7 +114,7 @@ class MinecraftServer:
     def _update_status_callback(self, output: str):
         if self._status == ServerStatus.STARTING:
             if "For help, type \"help\"" in output:
-                self._mcstatus_server = JavaServer("localhost", self._properties.get("server-port"))
+                self._mcstatus_server = JavaServer("localhost", self.properties.get("server-port"))
                 self._status = ServerStatus.RUNNING
         if self._status == ServerStatus.STOPPING:
             if "ThreadedAnvilChunkStorage: All dimensions are saved" in output:

@@ -46,7 +46,7 @@ class ManagerDataStore:
 
             self._latest_sid = data.get("latest_sid", 0)
 
-            for sid, config in data["servers"]:
+            for sid, config in data["servers"].items():
                 try:
                     self._servers[sid] = ServerConfig(**config)
                 except Exception as e:
