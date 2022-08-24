@@ -50,7 +50,7 @@ class ServerProcess(psutil.Popen):
         self.stdin.write(inp)
         self.stdin.flush()
 
-    def update_resource_usage(self):
+    def get_resource_usage(self):
         memory_system = psutil.virtual_memory()
         memory_server = self.memory_full_info()
         self.data = {
@@ -64,6 +64,4 @@ class ServerProcess(psutil.Popen):
             }
         }
         self.callbacks.metrics_update(self.data)
-
-    def get_resource_usage(self):
         return self.data
