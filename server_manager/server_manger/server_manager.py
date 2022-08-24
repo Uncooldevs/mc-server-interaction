@@ -92,7 +92,5 @@ class ServerManager:
 
         logger.info("Starting server to generate all files...")
 
-        server.start()
-
     def get_server(self, sid) -> MinecraftServer:
         return self._servers.get(sid)
