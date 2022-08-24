@@ -1,4 +1,4 @@
-from typing import List, Callable
+from typing import Callable
 
 import psutil
 
@@ -34,10 +34,10 @@ class ServerProcess(psutil.Popen):
         self.callbacks = Callbacks
 
     def read_output(self):
-        print("start read")
         while not self.stop and self.is_running():
             output = self.stdout.readline()
             if output:
+                print(output)
                 output = output.rstrip("\n")
                 self.stdout_since_last_send += output
                 self.logs += output

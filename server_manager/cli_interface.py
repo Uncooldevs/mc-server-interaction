@@ -1,58 +1,101 @@
-from argparse import ArgumentParser
+import logging
 
 from server_manager.server_manger import ServerManager
 
+menu = """
+1. Create Server
+2. List available Servers
+3. Show server info
+"""
+
+logging.basicConfig(
+    format="[%(name)s] %(levelname)s: %(message)s",
+    level=logging.INFO,
+)
+
+
+class Options:
+    CREATE = 1
+    LIST = 2
+    SHOW = 3
+
 
 def main():
-    parser = ArgumentParser(description='Server Manager')
-
-    subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands', help='additional help', dest='subparser')
-
-    create = subparsers.add_parser("create", help="Create a new server")
-    create.add_argument("--name", "-n", help="Name of the server", required=False)
-    create.add_argument("--path", "-p", help="Path to the server", required=False)
-    create.add_argument("--version", "-v", help="Version of the server", required=False)
-
-    server_action = subparsers.add_parser("server", help="Server action")
-    server_action.add_argument("sid", help="Sid of the server. Run `manager list` to get the sid")
-    server_action.add_argument("action", help="Action to perform ['start', 'stop', 'kill']")
-
-    parser.add_argument("--list-servers", action="store_true", help="List all servers")
-
-    args = parser.parse_args()
-
     server_manager = ServerManager()
+    while True:
+        print(menu)
+        try:
+            input_text = int(input("Select option: "))
+        except ValueError:
+            print("Not a valid input")
+            continue
+        if input_text not in list(range(1, 4)):
+            print("Selected option does not exist")
+            continue
 
-    if args.list_servers:
-        servers = server_manager.get_servers()
-        if not servers:
-            print("No servers found")
-            return
-        for sid, server in servers.items():
-            print(f"{sid}: {server.name}")
-            return
+        if input_text == Options.LIST:
+            servers = server_manager.get_servers()
+            if not servers:
+                print("No servers found")
+            for sid, server in servers.items():
+                print(f"{server.server_config.name} : sid:{sid}")
 
-    elif args.subparser == "create":
-        if not args.path:
-            args.path = input("Enter path to server directory: ")
-        if not args.version:
-            args.version = input("Enter server version: ")
-        if not args.name:
-            args.name = input("Enter server name: ")
-        print("Creating server...")
-        server_manager.create_new_server(args.name, args.path, args.version)
-        return
+        elif input_text == Options.CREATE:
+            while True:
+                version = input(
+                    "Enter version ('help' to list all available versions(many), Leave empty to use latest): ")
+                if version == "help":
+                    print(" ".join(list(server_manager.available_versions.available_versions.keys())))
+                    continue
+                break
+            if version == "":
+                version = server_manager.available_versions.get_latest_version()
+            while True:
+                name = input("Enter server name: ")
+                if name == "":
+                    print("Name cannot be empty")
+                    continue
+                break
 
-    elif args.subparser == "server":
-        server = server_manager.get_server(args.sid)
-        print(f"""
-        Path: {server.server_config.path}
-        Status: {server.get_status().name}
-        """)
-        return
+            print("Creating server...")
+            server_manager.create_new_server(name, version)
 
-    else:
-        parser.print_help()
+        elif input_text == Options.SHOW:
+            servers = server_manager.get_servers()
+            if not servers:
+                print("No servers found")
+                continue
+            for sid, server in servers.items():
+                print(f"{sid}: {server.server_config.name}")
+
+            sid = input("Enter server id: ")
+            server = server_manager.get_server(sid)
+            if not server:
+                print("Server not found")
+                continue
+
+            while True:
+
+                print(f"""
+Path: {server.server_config.path}
+Status: {server.get_status().name}
+                """)
+
+                print("""
+1. Start Server
+2. Delete Server
+3. Go back            
+                """)
+                user_input = input("Select option: ")
+                if user_input == "1":
+                    server_manager.start_server(sid)
+                    print("Server started")
+                elif user_input == "2":
+                    server_manager.delete_server(sid)
+                    print("Server deleted")
+                    break
+                elif user_input == "3":
+                    break
 
 
 if __name__ == '__main__':

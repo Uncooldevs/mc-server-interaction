@@ -15,7 +15,6 @@ from server_manager.mc_server_interaction.models import WorldGenerationSettings
 
 logger = getLogger("ServerManager")
 
-
 class ServerManager:
     available_versions = AvailableMinecraftServerVersions()
     _servers: Dict[str, MinecraftServer] = {}
@@ -47,7 +46,8 @@ class ServerManager:
         self.config.remove_server(sid)
         self.config.save()
 
-    def create_new_server(self, name, path, version):
+    def create_new_server(self, name, version):
+        path = os.path.join(self.config.server_data_dir, "".join(c for c in name.replace(" ", "_") if c.isalnum()).strip())
         if not os.path.exists(path):
             os.makedirs(path)
         if len(os.listdir(path)) > 0:
@@ -71,7 +71,7 @@ class ServerManager:
         config = ServerConfig(path=path, created_at=time.time(), version=version, name=name)
         self.config.add_server(self.config.get_latest_sid(), config)
         server = MinecraftServer(config)
-        self._servers[self.config.get_latest_sid()] = server
+        self._servers[str(self.config.get_latest_sid())] = server
 
         # TODO interface for world generator settings
         world_generator_settings = WorldGenerationSettings()
