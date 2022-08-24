@@ -45,7 +45,7 @@ class MinecraftServer:
         self._status = status
 
     def start(self):
-        if self.is_running():
+        if self.is_running:
             raise ServerAlreadyRunningException()
         if self._status == ServerStatus.NOT_INSTALLED or self._status == ServerStatus.INSTALLING:
             raise ServerNotInstalledException()
@@ -61,12 +61,12 @@ class MinecraftServer:
         self._status = ServerStatus.STARTING
 
     def stop(self):
-        if self.is_online():
+        if self.is_online:
             self._send_command("stop")
             self._status = ServerStatus.STOPPING
 
     def kill(self):
-        if self.is_running():
+        if self.is_running:
             self.process.kill()
         self._status = ServerStatus.STOPPED
 
@@ -75,7 +75,7 @@ class MinecraftServer:
 
     @cached_property_with_ttl(ttl=5)
     def get_system_load(self):
-        if self.is_running():
+        if self.is_running:
             return self.process.get_resource_usage()
 
     @cached_property_with_ttl(ttl=10)
@@ -91,17 +91,19 @@ class MinecraftServer:
         return players
 
     def send_command(self, command: str):
-        if self.is_online():
+        if self.is_online:
             if command.startswith("/"):
                 command = command.lstrip("/")
 
             self._send_command(command)
 
+    @property
     def is_running(self) -> bool:
         return self.process is not None and self.process.is_running()
 
+    @property
     def is_online(self) -> bool:
-        return self.is_running() and self._status == ServerStatus.RUNNING
+        return self.is_running and self._status == ServerStatus.RUNNING
 
     def _send_command(self, command):
         self.process.send_input(command)
