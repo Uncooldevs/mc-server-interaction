@@ -1,7 +1,7 @@
 import os
 import subprocess
 from threading import Thread
-from typing import Optional
+from typing import Optional, Union
 
 from mcstatus import JavaServer
 from cached_property import cached_property_with_ttl
@@ -37,6 +37,9 @@ class MinecraftServer:
 
     def get_properties(self) -> ServerProperties:
         return self._properties
+
+    def set_property(self, key: str, value: Union[str, int, float, bool]):
+        self._properties.set(key, value)
 
     def set_status(self, status: ServerStatus):
         self._status = status
