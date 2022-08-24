@@ -32,6 +32,9 @@ class ManagerDataStore:
         self._servers[sid] = server_config
         self.save()
 
+    def remove_server(self, sid):
+        self._servers.pop(sid)
+
     def load_data(self):
         if not os.path.exists(self.data_file):
             self._servers = {}

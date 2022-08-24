@@ -9,7 +9,7 @@ import requests
 from .utils import AvailableMinecraftServerVersions
 from .data_store import ManagerDataStore
 from server_manager.mc_server_interaction import MinecraftServer, ServerConfig
-from server_manager.mc_server_interaction.exceptions import DirectoryNotEmptyException
+from server_manager.mc_server_interaction.exceptions import DirectoryNotEmptyException, ServerAlreadyRunningException
 from server_manager.mc_server_interaction.models import WorldGenerationSettings
 
 
@@ -35,6 +35,17 @@ class ServerManager:
 
     def get_servers(self):
         return self._servers
+
+    def delete_server(self, sid):
+        server = self._servers.get(sid)
+        if server.is_running:
+            raise ServerAlreadyRunningException()
+
+        path = server.server_config.path
+        shutil.rmtree(path)
+        self._servers.pop(sid)
+        self.config.remove_server(sid)
+        self.config.save()
 
     def create_new_server(self, name, path, version):
         if not os.path.exists(path):
@@ -80,4 +91,3 @@ class ServerManager:
 
     def get_server(self, sid) -> MinecraftServer:
         return self._servers.get(sid)
-
