@@ -24,7 +24,7 @@ class MinecraftServer:
     _mcstatus_server: Optional[JavaServer]
 
     def __init__(self, server_config: ServerConfig):
-        self.logger = logging.getLogger(f"{self.__class__.__name__} {server_config.name}")
+        self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}:{server_config.name}")
         self.server_config = server_config
 
         self._status = ServerStatus.STOPPED
