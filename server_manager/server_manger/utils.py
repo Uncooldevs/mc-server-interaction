@@ -1,13 +1,16 @@
+import datetime
+import json
+import os
+
 import requests
 from bs4 import BeautifulSoup
-import os
-import json
-import datetime
 
 from server_manager.exceptions import UnsupportedVersionException
+from server_manager.paths import data_dir
 
 
 class AvailableMinecraftServerVersions:
+    filename = str(data_dir / "minecraft_versions.json")
 
     def __init__(self):
         self.available_versions = {}
@@ -22,8 +25,8 @@ class AvailableMinecraftServerVersions:
 
     def _get_available_minecraft_versions(self):
 
-        if os.path.exists("minecraft_versions.json"):
-            with open("minecraft_versions.json", "r") as f:
+        if os.path.exists(self.filename):
+            with open(self.filename, "r") as f:
                 data = json.load(f)
             timestamp = data["timestamp"]
             timestamp = datetime.datetime.fromtimestamp(float(timestamp))
@@ -45,7 +48,7 @@ class AvailableMinecraftServerVersions:
                     and not version_link.startswith("/download/inf"):
                 self.available_versions[version.get("id")] = "https://mcversions.net" \
                                                              + version.find("a", text="Download").get("href")
-        with open("minecraft_versions.json", "w") as f:
+        with open(self.filename, "w") as f:
             data = {
                 "versions": self.available_versions,
                 "timestamp": str(datetime.datetime.now().timestamp())

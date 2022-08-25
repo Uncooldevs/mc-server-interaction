@@ -4,6 +4,7 @@ from logging import getLogger
 from typing import Dict
 
 from server_manager.mc_server_interaction.models import ServerConfig
+from server_manager.paths import data_dir
 
 logger = getLogger("DataStore")
 
@@ -11,9 +12,9 @@ logger = getLogger("DataStore")
 class ManagerDataStore:
 
     _servers: Dict[str, ServerConfig]
-    data_file = "manager_data.json"
+    data_file = str(data_dir / "manager_data.json")
     _latest_sid: int = 0
-    server_data_dir = os.path.abspath("./servers")
+    server_data_dir = str(data_dir / "servers")
 
     def __init__(self):
         self._servers = {}

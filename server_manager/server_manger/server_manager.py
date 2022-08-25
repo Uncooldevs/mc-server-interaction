@@ -6,12 +6,13 @@ from typing import Dict
 
 import requests
 
+from server_manager.exceptions import DirectoryNotEmptyException, ServerRunningException
+from server_manager.mc_server_interaction import MinecraftServer
+from .data_store import ManagerDataStore
 from .models import WorldGenerationSettings
 from .utils import AvailableMinecraftServerVersions
-from .data_store import ManagerDataStore
-from server_manager.mc_server_interaction import MinecraftServer
-from server_manager.exceptions import DirectoryNotEmptyException, ServerRunningException
 from ..mc_server_interaction.models import ServerConfig
+from ..paths import cache_dir
 
 
 class ServerManager:
@@ -66,11 +67,12 @@ class ServerManager:
             download_url = self.available_versions.get_download_link(version)
             resp = requests.get(download_url)
             if resp.status_code == 200:
-                if not os.path.exists("cache/"):
-                    os.mkdir("cache/")
-                with open(f"cache/minecraft_server_{version}.jar", "wb") as f:
+                filename = str(cache_dir / f"minecraft_server_{version}.jar")
+                with open(filename, "wb") as f:
                     f.write(resp.content)
-                shutil.copy(f"cache/minecraft_server_{version}.jar", os.path.join(path, "server.jar"))
+                shutil.copy(filename, os.path.join(path, "server.jar"))
+            else:
+                raise Exception(f"Error downloading server jar for version {version}")
 
         self.config.increment_sid()
         config = ServerConfig(path=path, created_at=time.time(), version=version, name=name)
