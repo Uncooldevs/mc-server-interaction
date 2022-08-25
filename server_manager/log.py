@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import os.path
 
 
@@ -17,7 +18,7 @@ def setup_logging():
 
     if not os.path.exists("logs"):
         os.mkdir("logs")
-    file_handler = logging.FileHandler("logs/MCServerInteraction.log")
+    file_handler = logging.handlers.TimedRotatingFileHandler("logs/MCServerInteraction.log", when="midnight")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
     file_handler.addFilter(LogNameFilter())
