@@ -1,22 +1,21 @@
 import json
+import logging
 import os
-from logging import getLogger
 from typing import Dict
 
 from server_manager.mc_server_interaction.models import ServerConfig
 from server_manager.paths import data_dir
 
-logger = getLogger("DataStore")
-
 
 class ManagerDataStore:
-
+    logger: logging.Logger
     _servers: Dict[str, ServerConfig]
     data_file = str(data_dir / "manager_data.json")
     _latest_sid: int = 0
     server_data_dir = str(data_dir / "servers")
 
     def __init__(self):
+        self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}")
         self._servers = {}
         self.load_data()
 
@@ -46,7 +45,7 @@ class ManagerDataStore:
             try:
                 data = json.load(f)
             except json.JSONDecodeError as e:
-                logger.error(f"Error loading data: {e}")
+                self.logger.error(f"Error loading data: {e}")
                 return
 
             self._latest_sid = data.get("latest_sid", 0)
@@ -56,7 +55,7 @@ class ManagerDataStore:
                 try:
                     self._servers[sid] = ServerConfig(**config)
                 except Exception as e:
-                    logger.error(f"Error loading server config for {sid}: {e}")
+                    self.logger.error(f"Error loading server config for {sid}: {e}")
 
     def save(self):
         with open(self.data_file, "w") as f:

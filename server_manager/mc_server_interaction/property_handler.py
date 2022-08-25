@@ -1,14 +1,18 @@
+import logging
 import os
 from typing import Optional
 
 
 class ServerProperties:
+    logger: logging.Logger
     __data: dict
 
     def __init__(self, file_name: str):
+        self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}")
         self.file_name = file_name
         self.__data = {}
         if not os.path.exists(file_name):
+            self.logger.warning("Properties file not found, creating empty instance")
             return
         with open(file_name, "r", encoding="utf-8") as f:
             for i in f:
@@ -27,6 +31,7 @@ class ServerProperties:
                         value = raw_value
 
                 self.__data[key] = value
+            self.logger.debug(f"Loaded {len(self.__data)} entries properties file")
 
     def set(self, key, value):
         self.__data[key] = value
@@ -47,5 +52,4 @@ class ServerProperties:
                 else:
                     value = str(raw_value)
                 f.write(f"{key}={value}\n")
-
-
+        self.logger.debug("Saved server properties")

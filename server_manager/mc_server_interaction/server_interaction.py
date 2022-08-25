@@ -70,12 +70,12 @@ class MinecraftServer:
         self.process.callbacks.stdout.add_callback(self._update_status_callback)
         self._start_process_loop()
         self.logger.info("Start event loop")
-        self._status = ServerStatus.STARTING
+        self.set_status(ServerStatus.STARTING)
 
     def stop(self):
         if self.is_online:
             self._send_command("stop")
-            self._status = ServerStatus.STOPPING
+            self.set_status(ServerStatus.STOPPING)
         else:
             self.logger.warning("Server not running")
 
@@ -83,7 +83,7 @@ class MinecraftServer:
         if self.is_running:
             self.logger.info("Killing server process")
             self.process.kill()
-            self._status = ServerStatus.STOPPED
+            self.set_status(ServerStatus.STOPPED)
 
     def get_status(self) -> ServerStatus:
         return self._status
