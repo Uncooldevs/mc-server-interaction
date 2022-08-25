@@ -32,7 +32,7 @@ class ServerManager:
         self._servers.get(sid).start()
 
     def stop_server(self, sid):
-        self._servers.get(sid).start()
+        self._servers.get(sid).stop()
 
     def stop_all_servers(self):
         for server in self._servers.values():

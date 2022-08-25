@@ -1,3 +1,4 @@
+from server_manager.mc_server_interaction.models import ServerStatus
 from server_manager.server_manger import ServerManager
 
 menu = """
@@ -72,15 +73,21 @@ def main():
 Path: {server.server_config.path}
 Status: {server.get_status().name}
                 """)
-
-                print("""
-1. Start Server
+                action = "Start" if server.get_status() == ServerStatus.STOPPED else "Stop"
+                print(f"""
+1. {action} Server
 2. Delete Server
 3. Go back            
                 """)
                 user_input = input("Select option: ")
                 if user_input == "1":
-                    server_manager.start_server(sid)
+                    print(server.get_status())
+                    if server.get_status() == ServerStatus.STOPPED:
+                        server.start()
+                    else:
+                        server.stop()
+                    server_manager.start_server(
+                        sid) if server.get_status() == ServerStatus.STOPPED else server_manager.stop_server(sid)
                     print("Server started")
                 elif user_input == "2":
                     server_manager.delete_server(sid)
