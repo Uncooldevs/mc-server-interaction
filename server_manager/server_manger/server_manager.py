@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import time
@@ -13,15 +14,15 @@ from server_manager.mc_server_interaction import MinecraftServer
 from server_manager.mc_server_interaction.exceptions import DirectoryNotEmptyException, ServerAlreadyRunningException
 from ..mc_server_interaction.models import ServerConfig
 
-logger = getLogger("ServerManager")
-
 
 class ServerManager:
+    logger: logging.Logger
     available_versions = AvailableMinecraftServerVersions()
     _servers: Dict[str, MinecraftServer] = {}
     config: ManagerDataStore
 
     def __init__(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.config = ManagerDataStore()
         for sid, server_config in self.config.get_servers().items():
             server = MinecraftServer(server_config)
@@ -58,11 +59,11 @@ class ServerManager:
         if len(os.listdir(path)) > 0:
             raise DirectoryNotEmptyException(f"Directory {path} is not empty")
         if os.path.exists(f"cache/minecraft_server_{version}.jar"):
-            logger.info("Using cached jar file")
+            self.logger.info(f"Using cached server jar for version {version}")
             shutil.copy(f"cache/minecraft_server_{version}.jar", os.path.join(path, "server.jar"))
 
         else:
-            logger.info("Downloading jar file")
+            self.logger.info(f"Downloading server jar for version {version}")
             download_url = self.available_versions.get_download_link(version)
             resp = requests.get(download_url)
             if resp.status_code == 200:
@@ -86,11 +87,9 @@ class ServerManager:
 
         server.properties.save()
 
-        logger.info("Write eula file")
+        self.logger.info("Write eula file")
         with open(os.path.join(path, "eula.txt"), "w") as f:
             f.write("eula=true")
-
-        logger.info("Starting server to generate all files...")
 
     def get_server(self, sid) -> MinecraftServer:
         return self._servers.get(sid)

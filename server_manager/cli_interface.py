@@ -1,5 +1,3 @@
-import logging
-
 from server_manager.server_manger import ServerManager
 
 menu = """
@@ -8,11 +6,6 @@ menu = """
 3. Show server info
 4. Exit App
 """
-
-logging.basicConfig(
-    format="[%(name)s] %(levelname)s: %(message)s",
-    level=logging.INFO,
-)
 
 
 class Options:

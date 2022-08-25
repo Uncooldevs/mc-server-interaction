@@ -1,7 +1,7 @@
 import json
+import logging
 import os
 import subprocess
-from logging import getLogger
 from threading import Thread
 from typing import Optional, Union
 from datetime import datetime
@@ -15,9 +15,8 @@ from server_manager.mc_server_interaction.server_process import ServerProcess
 from server_manager.mc_server_interaction.property_handler import ServerProperties
 
 
-logger = getLogger("MinecraftServer")
-
 class MinecraftServer:
+    logger: logging.Logger
     process: Optional[ServerProcess]
     server_config: ServerConfig
     _status: ServerStatus
@@ -25,6 +24,7 @@ class MinecraftServer:
     _mcstatus_server: Optional[JavaServer]
 
     def __init__(self, server_config: ServerConfig):
+        self.logger = logging.getLogger(f"{self.__class__.__name__} {server_config.name}")
         self.server_config = server_config
 
         self._status = ServerStatus.STOPPED
@@ -35,9 +35,11 @@ class MinecraftServer:
 
     def load_properties(self):
         properties_file = os.path.join(self.server_config.path, "server.properties")
+        self.logger.debug(f"Attempting to load server properties from {properties_file}")
         self.properties = ServerProperties(properties_file)
 
     def save_properties(self):
+        self.logger.debug("Saving server properties")
         self.properties.save()
 
     def get_properties(self) -> ServerProperties:
@@ -47,6 +49,7 @@ class MinecraftServer:
         self.properties.set(key, value)
 
     def set_status(self, status: ServerStatus):
+        self.logger.debug(f"Setting server status to {status}")
         self._status = status
 
     def start(self):
@@ -57,7 +60,7 @@ class MinecraftServer:
         jar_path = os.path.join(self.server_config.path, "server.jar")
         if not os.path.exists(jar_path):
             raise FileNotFoundError()
-        logger.info("Starting server")
+        self.logger.info("Starting server")
         command = ["java", f"-Xmx{self.server_config.ram}M", f"-Xms{self.server_config.ram}M", "-jar",
                    jar_path, "--nogui"]
         self.process = ServerProcess(command, cwd=self.server_config.path, stdin=subprocess.PIPE,
@@ -66,7 +69,7 @@ class MinecraftServer:
                                      )
         self.process.callbacks.stdout.add_callback(self._update_status_callback)
         self._start_process_loop()
-        logger.info("Start event loop")
+        self.logger.info("Start event loop")
         self._status = ServerStatus.STARTING
 
     def stop(self):
@@ -74,12 +77,13 @@ class MinecraftServer:
             self._send_command("stop")
             self._status = ServerStatus.STOPPING
         else:
-            logger.info("Server is not running")
+            self.logger.warning("Server not running")
 
     def kill(self):
         if self.is_running:
+            self.logger.info("Killing server process")
             self.process.kill()
-        self._status = ServerStatus.STOPPED
+            self._status = ServerStatus.STOPPED
 
     def get_status(self) -> ServerStatus:
         return self._status
@@ -94,6 +98,7 @@ class MinecraftServer:
         banned_players = []
         banned_players_file = os.path.join(self.server_config.path, "banned-players.json")
         if os.path.isfile(banned_players_file):
+            self.logger.debug(f"Loading banned players from {banned_players_file}")
             with open(banned_players_file, "r") as f:
                 data = json.load(f)
             for player_data in data:
@@ -111,6 +116,7 @@ class MinecraftServer:
         op_players = []
         op_players_file = os.path.join(self.server_config.path, "ops.json")
         if os.path.isfile(op_players_file):
+            self.logger.debug(f"Loading op players from {op_players_file}")
             with open(op_players_file, "r") as f:
                 data = json.load(f)
             for player_data in data:
@@ -133,7 +139,10 @@ class MinecraftServer:
                    op_players))
         other_players = banned_players + op_players
 
-        online_player_names = self._mcstatus_server.query().players.names
+        online_player_names = []
+        if self._mcstatus_server is not None:
+            self.logger.info("Retrieving online players via query port")
+            online_player_names = self._mcstatus_server.query().players.names
         for name in online_player_names:
             existing_player = next((player for player in other_players if player.name == name), None)
             if existing_player is not None:
@@ -161,6 +170,7 @@ class MinecraftServer:
         return self.is_running and self._status == ServerStatus.RUNNING
 
     def _send_command(self, command):
+        self.logger.info(f"Sending command {command} to server")
         self.process.send_input(command)
 
     def _start_process_loop(self):
@@ -171,9 +181,10 @@ class MinecraftServer:
     def _update_status_callback(self, output: str):
         if self._status == ServerStatus.STARTING:
             if "For help, type \"help\"" in output:
-                self._mcstatus_server = JavaServer("localhost", self.properties.get("server-port"))
-                self._status = ServerStatus.RUNNING
+                if self.properties.get("enable-query"):
+                    self._mcstatus_server = JavaServer("localhost", self.properties.get("server-port"))
+                self.set_status(ServerStatus.RUNNING)
         if self._status == ServerStatus.STOPPING:
             if "ThreadedAnvilChunkStorage: All dimensions are saved" in output:
                 self._mcstatus_server = None
-                self._status = ServerStatus.STOPPED
+                self.set_status(ServerStatus.STOPPED)

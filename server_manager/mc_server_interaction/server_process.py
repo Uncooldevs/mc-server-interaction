@@ -37,7 +37,6 @@ class ServerProcess(psutil.Popen):
         while not self.stop and self.is_running():
             output = self.stdout.readline()
             if output:
-                print(output)
                 output = output.rstrip("\n")
                 self.stdout_since_last_send += output
                 self.logs += output
