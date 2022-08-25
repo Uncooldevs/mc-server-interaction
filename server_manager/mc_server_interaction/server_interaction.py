@@ -9,7 +9,7 @@ from datetime import datetime
 from mcstatus import JavaServer
 from cached_property import cached_property_with_ttl
 
-from server_manager.mc_server_interaction.exceptions import ServerAlreadyRunningException, ServerNotInstalledException
+from server_manager.exceptions import ServerRunningException, ServerNotInstalledException
 from server_manager.mc_server_interaction.models import ServerStatus, Player, ServerConfig, BannedPlayer, OPPlayer
 from server_manager.mc_server_interaction.server_process import ServerProcess
 from server_manager.mc_server_interaction.property_handler import ServerProperties
@@ -54,7 +54,7 @@ class MinecraftServer:
 
     def start(self):
         if self.is_running:
-            raise ServerAlreadyRunningException()
+            raise ServerRunningException()
         if self._status == ServerStatus.NOT_INSTALLED or self._status == ServerStatus.INSTALLING:
             raise ServerNotInstalledException()
         jar_path = os.path.join(self.server_config.path, "server.jar")

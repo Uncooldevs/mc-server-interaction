@@ -2,7 +2,6 @@ import logging
 import os
 import shutil
 import time
-from logging import getLogger
 from typing import Dict
 
 import requests
@@ -11,7 +10,7 @@ from .models import WorldGenerationSettings
 from .utils import AvailableMinecraftServerVersions
 from .data_store import ManagerDataStore
 from server_manager.mc_server_interaction import MinecraftServer
-from server_manager.mc_server_interaction.exceptions import DirectoryNotEmptyException, ServerAlreadyRunningException
+from server_manager.exceptions import DirectoryNotEmptyException, ServerRunningException
 from ..mc_server_interaction.models import ServerConfig
 
 
@@ -44,7 +43,7 @@ class ServerManager:
     def delete_server(self, sid):
         server = self._servers.get(sid)
         if server.is_running:
-            raise ServerAlreadyRunningException()
+            raise ServerRunningException()
 
         path = server.server_config.path
         shutil.rmtree(path)

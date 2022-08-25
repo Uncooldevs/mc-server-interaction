@@ -12,7 +12,7 @@ class ServerNotInstalledException(MCServerInteractionException):
     pass
 
 
-class ServerAlreadyRunningException(MCServerInteractionException):
+class ServerRunningException(MCServerInteractionException):
     pass
 
 

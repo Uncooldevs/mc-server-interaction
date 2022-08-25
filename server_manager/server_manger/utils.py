@@ -4,7 +4,7 @@ import os
 import json
 import datetime
 
-from server_manager.mc_server_interaction.exceptions import UnsupportedVersionException
+from server_manager.exceptions import UnsupportedVersionException
 
 
 class AvailableMinecraftServerVersions:
