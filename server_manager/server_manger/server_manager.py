@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import shutil
@@ -36,8 +37,7 @@ class ServerManager:
         await self._servers.get(sid).stop()
 
     async def stop_all_servers(self):
-        for server in self._servers.values():
-            await server.stop()
+        await asyncio.gather(*[server.stop() for server in self._servers.values() if server.is_running])
 
     def get_servers(self):
         return self._servers

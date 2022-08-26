@@ -29,7 +29,6 @@ class ServerProcess:
     callbacks = Callbacks()
     system_metrics: dict = {}
     num_cpus = psutil.cpu_count()
-    stop = False
     stdout_since_last_send = ""
     logs = ""
 
@@ -43,7 +42,7 @@ class ServerProcess:
         self.psutil_proc = psutil.Process(self.process.pid)
 
     async def read_output(self):
-        while not self.stop and self.is_running():
+        while self.is_running():
             output = await self.process.stdout.readline()
             if output:
                 output = output.decode("utf-8")

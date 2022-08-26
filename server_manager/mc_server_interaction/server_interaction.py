@@ -72,10 +72,18 @@ class MinecraftServer:
         self.logger.info("Start event loop")
         self.set_status(ServerStatus.STARTING)
 
-    async def stop(self):
+    async def stop(self, timeout=60):
         if self.is_online:
-            await self._send_command("stop")
+            self.logger.info("Stopping server")
+            await self.process.send_input("stop")
             self.set_status(ServerStatus.STOPPING)
+            for i in range(timeout):
+                await asyncio.sleep(1)
+                if not self.is_online:
+                    return
+            # kill if timeout expired
+            self.logger.error("Timeout expired, killing server")
+            self.kill()
 
         else:
             self.logger.warning("Server not running")
@@ -183,4 +191,5 @@ class MinecraftServer:
         if self._status == ServerStatus.STOPPING:
             if "ThreadedAnvilChunkStorage: All dimensions are saved" in output:
                 self._mcstatus_server = None
+                self.process = None
                 self.set_status(ServerStatus.STOPPED)
