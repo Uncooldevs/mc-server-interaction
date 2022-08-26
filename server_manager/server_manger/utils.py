@@ -2,8 +2,9 @@ import datetime
 import json
 import logging
 import os
+import aiofile
+import aiohttp
 
-import requests
 from bs4 import BeautifulSoup
 
 from server_manager.exceptions import UnsupportedVersionException
@@ -17,21 +18,23 @@ class AvailableMinecraftServerVersions:
     def __init__(self):
         self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}")
         self.available_versions = {}
-        self._get_available_minecraft_versions()  # load on init
         # print(self.available_versions)
 
-    def _get_webpage(self, url):
+    async def load(self):
+        await self._get_available_minecraft_versions()
+
+    async def _get_webpage(self, url) -> str:
         self.logger.debug("Retrieving webpage")
         headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0"
         }
-        return requests.get(url, headers=headers).text
+        async with aiohttp.ClientSession() as session:
+            return await (await session.get(url, headers=headers)).text()
 
-    def _get_available_minecraft_versions(self):
-
+    async def _get_available_minecraft_versions(self):
         if os.path.exists(self.filename):
-            with open(self.filename, "r") as f:
-                data = json.load(f)
+            async with aiofile.async_open(self.filename, "r") as f:
+                data = json.loads(await f.read())
             timestamp = data["timestamp"]
             timestamp = datetime.datetime.fromtimestamp(float(timestamp))
             diff = datetime.datetime.now() - timestamp
@@ -41,7 +44,7 @@ class AvailableMinecraftServerVersions:
                 return
 
         self.logger.debug("Updating Minecraft versions")
-        webpage = self._get_webpage("https://mcversions.net")
+        webpage = await self._get_webpage("https://mcversions.net")
         soup = BeautifulSoup(webpage, "html.parser")
         releases = soup.find_all("div",
                                  {"class": "item flex items-center p-3 border-b border-gray-700 snap-start ncItem"})
@@ -53,21 +56,21 @@ class AvailableMinecraftServerVersions:
                     and not version_link.startswith("/download/inf"):
                 self.available_versions[version.get("id")] = "https://mcversions.net" \
                                                              + version.find("a", text="Download").get("href")
-        with open(self.filename, "w") as f:
+        async with aiofile.async_open(self.filename, "w") as f:
             data = {
                 "versions": self.available_versions,
                 "timestamp": str(datetime.datetime.now().timestamp())
             }
-            json.dump(data, f, indent=4)
+            await f.write(json.dumps(data, indent=4))
 
-    def get_download_link(self, version: str):
+    async def get_download_link(self, version: str):
         if version == "latest":
             version = list(self.available_versions.keys())[0]
         self.logger.debug(f"Retrieving download link for server jar for version {version}")
         url = self.available_versions.get(version)
         if url is None:
             raise UnsupportedVersionException()
-        webpage = self._get_webpage(url)
+        webpage = await self._get_webpage(url)
         soup = BeautifulSoup(webpage, "html.parser")
         download_button = soup.find("a", text="Download Server Jar")
         download_link = download_button.get("href")
@@ -76,3 +79,9 @@ class AvailableMinecraftServerVersions:
 
     def get_latest_version(self):
         return list(self.available_versions.keys())[0]
+
+
+async def copy_async(source: str, dest: str, chunk_size: int = 128 * 1024):
+    async with aiofile.async_open(source, 'rb') as source_file, aiofile.async_open(dest, "wb") as dest_file:
+        async for chunk in source_file.iter_chunked(chunk_size):
+            await dest_file.write(chunk)
