@@ -1,4 +1,6 @@
 
-requests
+aiohttp
+aiofile
+aioconsole
 mcstatus
 bs4

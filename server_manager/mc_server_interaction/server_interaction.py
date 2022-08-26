@@ -1,18 +1,17 @@
+import asyncio
 import json
 import logging
 import os
-import subprocess
-from threading import Thread
-from typing import Optional, Union
 from datetime import datetime
+from typing import Optional, Union
 
-from mcstatus import JavaServer
 from cached_property import cached_property_with_ttl
+from mcstatus import JavaServer
 
 from server_manager.exceptions import ServerRunningException, ServerNotInstalledException
 from server_manager.mc_server_interaction.models import ServerStatus, Player, ServerConfig, BannedPlayer, OPPlayer
-from server_manager.mc_server_interaction.server_process import ServerProcess
 from server_manager.mc_server_interaction.property_handler import ServerProperties
+from server_manager.mc_server_interaction.server_process import ServerProcess
 
 
 class MinecraftServer:
@@ -52,7 +51,7 @@ class MinecraftServer:
         self.logger.debug(f"Setting server status to {status}")
         self._status = status
 
-    def start(self):
+    async def start(self):
         if self.is_running:
             raise ServerRunningException()
         if self._status == ServerStatus.NOT_INSTALLED or self._status == ServerStatus.INSTALLING:
@@ -61,21 +60,31 @@ class MinecraftServer:
         if not os.path.exists(jar_path):
             raise FileNotFoundError()
         self.logger.info("Starting server")
+        self.properties.save()
         command = ["java", f"-Xmx{self.server_config.ram}M", f"-Xms{self.server_config.ram}M", "-jar",
                    jar_path, "--nogui"]
-        self.process = ServerProcess(command, cwd=self.server_config.path, stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT, universal_newlines=True
-                                     )
+        self.process = ServerProcess()
+        await self.process.start(command, self.server_config.path)
+        asyncio.create_task(self.process.read_output())
+
         self.process.callbacks.stdout.add_callback(self._update_status_callback)
-        self._start_process_loop()
+        # self._start_process_loop()
         self.logger.info("Start event loop")
         self.set_status(ServerStatus.STARTING)
 
-    def stop(self):
+    async def stop(self, timeout=60):
         if self.is_online:
-            self._send_command("stop")
+            self.logger.info("Stopping server")
+            await self.process.send_input("stop")
             self.set_status(ServerStatus.STOPPING)
+            for i in range(timeout):
+                await asyncio.sleep(1)
+                if not self.is_online:
+                    return
+            # kill if timeout expired
+            self.logger.error("Timeout expired, killing server")
+            self.kill()
+
         else:
             self.logger.warning("Server not running")
 
@@ -154,12 +163,12 @@ class MinecraftServer:
         players += other_players
         return players
 
-    def send_command(self, command: str):
+    async def send_command(self, command: str):
         if self.is_online:
             if command.startswith("/"):
                 command = command.lstrip("/")
 
-            self._send_command(command)
+            await self._send_command(command)
 
     @property
     def is_running(self) -> bool:
@@ -169,14 +178,9 @@ class MinecraftServer:
     def is_online(self) -> bool:
         return self.is_running and self._status == ServerStatus.RUNNING
 
-    def _send_command(self, command):
+    async def _send_command(self, command):
         self.logger.info(f"Sending command {command} to server")
-        self.process.send_input(command)
-
-    def _start_process_loop(self):
-        thrd = Thread(target=self.process.read_output)
-        thrd.daemon = True
-        thrd.start()
+        await self.process.send_input(command)
 
     def _update_status_callback(self, output: str):
         if self._status == ServerStatus.STARTING:
@@ -187,4 +191,5 @@ class MinecraftServer:
         if self._status == ServerStatus.STOPPING:
             if "ThreadedAnvilChunkStorage: All dimensions are saved" in output:
                 self._mcstatus_server = None
+                self.process = None
                 self.set_status(ServerStatus.STOPPED)

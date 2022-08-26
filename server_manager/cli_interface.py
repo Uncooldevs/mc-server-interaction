@@ -1,10 +1,14 @@
+import asyncio
 import logging
+
+import aioconsole
 
 from server_manager.log import set_console_log_level
 from server_manager.mc_server_interaction.models import ServerStatus
 from server_manager.server_manger import ServerManager
 
-set_console_log_level(logging.CRITICAL)
+set_console_log_level(logging.DEBUG)
+
 
 menu = """
 1. Create Server
@@ -21,12 +25,13 @@ class Options:
     EXIT = 4
 
 
-def main():
+async def main():
     server_manager = ServerManager()
+    await server_manager.available_versions.load()
     while True:
         print(menu)
         try:
-            input_text = int(input("Select option: "))
+            input_text = int(await aioconsole.ainput("Select option: "))
         except ValueError:
             print("Not a valid input")
             continue
@@ -40,7 +45,7 @@ def main():
 
         elif input_text == Options.CREATE:
             while True:
-                version = input(
+                version = await aioconsole.ainput(
                     "Enter version ('help' to list all available versions(many), Leave empty to use latest): ")
                 if version == "help":
                     print(" ".join(list(server_manager.available_versions.available_versions.keys())))
@@ -49,14 +54,14 @@ def main():
             if version == "":
                 version = "latest"
             while True:
-                name = input("Enter server name: ")
+                name = await aioconsole.ainput("Enter server name: ")
                 if name == "":
                     print("Name cannot be empty")
                     continue
                 break
 
             print("Creating server...")
-            server_manager.create_new_server(name, version)
+            await server_manager.create_new_server(name, version)
 
         elif input_text == Options.SHOW:
             servers = server_manager.get_servers()
@@ -66,7 +71,7 @@ def main():
             for sid, server in servers.items():
                 print(f"{sid}: {server.server_config.name}")
 
-            sid = input("Enter server id: ")
+            sid = await aioconsole.ainput("Enter server id: ")
             server = server_manager.get_server(sid)
             if not server:
                 print("Server not found")
@@ -82,27 +87,35 @@ Status: {server.get_status().name}
                 print(f"""
 1. {action} Server
 2. Delete Server
-3. Go back            
+3. Send command
+4. Go back            
                 """)
-                user_input = input("Select option: ")
+                user_input = await aioconsole.ainput("Select option: ")
                 if user_input == "1":
                     print(server.get_status())
                     if server.get_status() == ServerStatus.STOPPED:
-                        server.start()
+                        await server_manager.start_server(sid)
                     else:
-                        server.stop()
-                    server_manager.start_server(
-                        sid) if server.get_status() == ServerStatus.STOPPED else server_manager.stop_server(sid)
+                        await server.stop()
+
                     print("Server started")
                 elif user_input == "2":
                     server_manager.delete_server(sid)
                     print("Server deleted")
                     break
                 elif user_input == "3":
+                    await server.send_command(await aioconsole.ainput("Enter command: "))
+                elif user_input == "4":
                     break
+
         elif input_text == Options.EXIT:
-            server_manager.stop_all_servers()
+            await server_manager.stop_all_servers()
             break
 
+
+def run_app():
+    asyncio.run(main())
+
+
 if __name__ == '__main__':
-    main()
+    run_app()
