@@ -1,12 +1,13 @@
 # mc-server-interaction
-MC-Server-Interaction is a modern asyncio based library for interacting with Minecraft servers on your local machine.
+MC-Server-Interaction is a modern asyncio-based library for interacting with Minecraft servers on your local machine.
 
 ## Features
-- Create Servers
-- Start and stop servers
-- Send commands
 - Modern interface using asyncio and callbacks
 - Manage multiple servers
+  - Create Servers
+  - Start and stop servers
+  - Send commands
+- Retrieve player information
 
 
 ## Roadmap
