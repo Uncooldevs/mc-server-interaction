@@ -62,7 +62,7 @@ class AvailableMinecraftServerVersions:
 
     def get_download_link(self, version: str):
         if version == "latest":
-            version = self.available_versions[0]
+            version = list(self.available_versions.keys())[0]
         self.logger.debug(f"Retrieving download link for server jar for version {version}")
         url = self.available_versions.get(version)
         if url is None:
