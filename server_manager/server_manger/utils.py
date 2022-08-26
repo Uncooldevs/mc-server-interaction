@@ -73,3 +73,6 @@ class AvailableMinecraftServerVersions:
         download_link = download_button.get("href")
         # print(download_button.get("download"))
         return download_link
+
+    def get_latest_version(self):
+        return list(self.available_versions.keys())[0]

@@ -53,14 +53,18 @@ class ServerManager:
         self.config.save()
 
     def create_new_server(self, name, version):
-        path = os.path.join(self.config.server_data_dir, "".join(c for c in name.replace(" ", "_") if c.isalnum()).strip())
+        path = os.path.join(self.config.server_data_dir,
+                            "".join(c for c in name.replace(" ", "_") if c.isalnum()).strip())
         if not os.path.exists(path):
             os.makedirs(path)
+        if version == "latest":
+            version = self.available_versions.get_latest_version()
+
         if len(os.listdir(path)) > 0:
             raise DirectoryNotEmptyException(f"Directory {path} is not empty")
-        if os.path.exists(f"cache/minecraft_server_{version}.jar"):
+        if os.path.exists(str(cache_dir / f"minecraft_server_{version}.jar")):
             self.logger.info(f"Using cached server jar for version {version}")
-            shutil.copy(f"cache/minecraft_server_{version}.jar", os.path.join(path, "server.jar"))
+            shutil.copy(str(cache_dir / f"minecraft_server_{version}.jar"), os.path.join(path, "server.jar"))
 
         else:
             self.logger.info(f"Downloading server jar for version {version}")
