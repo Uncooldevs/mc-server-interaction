@@ -65,11 +65,10 @@ class MinecraftServer:
                    jar_path, "--nogui"]
         self.process = ServerProcess()
         await self.process.start(command, self.server_config.path)
+        self.logger.debug("Create asyncio task for stdout callback")
         asyncio.create_task(self.process.read_output())
 
         self.process.callbacks.stdout.add_callback(self._update_status_callback)
-        # self._start_process_loop()
-        self.logger.info("Start event loop")
         self.set_status(ServerStatus.STARTING)
 
     async def stop(self, timeout=60):
@@ -138,8 +137,6 @@ class MinecraftServer:
 
     @cached_property_with_ttl(ttl=10)
     def players(self):
-        if not self.properties.get("enable-query"):
-            return []
         players = []
         banned_players = self.banned_players
         op_players = self.op_players
@@ -169,6 +166,9 @@ class MinecraftServer:
                 command = command.lstrip("/")
 
             await self._send_command(command)
+
+        else:
+            self.logger.warning("Server not running")
 
     @property
     def is_running(self) -> bool:
