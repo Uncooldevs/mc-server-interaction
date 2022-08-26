@@ -188,8 +188,9 @@ class MinecraftServer:
                 if self.properties.get("enable-query"):
                     self._mcstatus_server = JavaServer("localhost", self.properties.get("server-port"))
                 self.set_status(ServerStatus.RUNNING)
-        if self._status == ServerStatus.STOPPING:
-            if "ThreadedAnvilChunkStorage: All dimensions are saved" in output:
-                self._mcstatus_server = None
-                self.process = None
-                self.set_status(ServerStatus.STOPPED)
+        if "[Server thread/INFO]: Stopping the server" in output:
+            self.set_status(ServerStatus.STOPPING)
+        if "[Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved" in output:
+            self._mcstatus_server = None
+            self.process = None
+            self.set_status(ServerStatus.STOPPED)
