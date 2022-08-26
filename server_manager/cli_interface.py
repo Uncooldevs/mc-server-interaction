@@ -1,5 +1,10 @@
+import logging
+
+from server_manager.log import set_console_log_level
 from server_manager.mc_server_interaction.models import ServerStatus
 from server_manager.server_manger import ServerManager
+
+set_console_log_level(logging.CRITICAL)
 
 menu = """
 1. Create Server
@@ -42,7 +47,7 @@ def main():
                     continue
                 break
             if version == "":
-                version = server_manager.available_versions.get_latest_version()
+                version = "latest"
             while True:
                 name = input("Enter server name: ")
                 if name == "":
