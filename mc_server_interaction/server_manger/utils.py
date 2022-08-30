@@ -2,13 +2,13 @@ import datetime
 import json
 import logging
 import os
+
 import aiofile
 import aiohttp
-
 from bs4 import BeautifulSoup
 
-from server_manager.exceptions import UnsupportedVersionException
-from server_manager.paths import data_dir
+from mc_server_interaction.exceptions import UnsupportedVersionException
+from mc_server_interaction.paths import data_dir
 
 
 class AvailableMinecraftServerVersions:

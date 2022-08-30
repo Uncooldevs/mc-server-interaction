@@ -1,7 +1,7 @@
 import os
 import time
 
-from server_manager.mc_server_interaction import MinecraftServer, HardwareConfig, PathConfig
+from mc_server_interaction.mc_server_interaction import MinecraftServer, HardwareConfig, PathConfig
 
 
 def print_console(output: str):

@@ -1,9 +1,9 @@
 import logging
 import logging.handlers
 import os.path
-from server_manager.paths import data_dir
 from typing import Union
 
+from mc_server_interaction.paths import data_dir
 
 logger = logging.getLogger("MCServerInteraction")
 

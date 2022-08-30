@@ -8,8 +8,8 @@ from typing import Dict
 import aiofile
 import aiohttp
 
-from server_manager.exceptions import DirectoryNotEmptyException, ServerRunningException
-from server_manager.mc_server_interaction import MinecraftServer
+from mc_server_interaction.exceptions import DirectoryNotEmptyException, ServerRunningException
+from mc_server_interaction.mc_server_interaction import MinecraftServer
 from .data_store import ManagerDataStore
 from .models import WorldGenerationSettings
 from .utils import AvailableMinecraftServerVersions, copy_async
@@ -42,6 +42,9 @@ class ServerManager:
     def get_servers(self):
         return self._servers
 
+    def name_exists(self, name: str):
+        return len(list(filter(lambda server: server.server_config.name == name, list(self._servers.values())))) != 0
+
     def delete_server(self, sid):
         server = self._servers.get(sid)
         if server.is_running:
@@ -54,6 +57,7 @@ class ServerManager:
         self.config.save()
 
     async def create_new_server(self, name, version):
+
         path = os.path.join(self.config.server_data_dir,
                             "".join(c for c in name.replace(" ", "_") if c.isalnum()).strip())
         if not os.path.exists(path):

@@ -8,10 +8,11 @@ from typing import Optional, Union
 from cached_property import cached_property_with_ttl
 from mcstatus import JavaServer
 
-from server_manager.exceptions import ServerRunningException, ServerNotInstalledException
-from server_manager.mc_server_interaction.models import ServerStatus, Player, ServerConfig, BannedPlayer, OPPlayer
-from server_manager.mc_server_interaction.property_handler import ServerProperties
-from server_manager.mc_server_interaction.server_process import ServerProcess
+from mc_server_interaction.exceptions import ServerRunningException, ServerNotInstalledException
+from mc_server_interaction.mc_server_interaction.models import ServerStatus, Player, ServerConfig, BannedPlayer, \
+    OPPlayer
+from mc_server_interaction.mc_server_interaction.property_handler import ServerProperties
+from mc_server_interaction.mc_server_interaction.server_process import ServerProcess
 
 
 class MinecraftServer:

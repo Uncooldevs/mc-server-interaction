@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "mc-server-interaction"
+name = "mc_server_interaction"
 version = "0.1.0"
 description = "Module for interacting with Minecraft servers"
 authors = ["Dummerle", "M0rica"]

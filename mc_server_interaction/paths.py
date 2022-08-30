@@ -2,7 +2,7 @@ import os
 import pathlib
 import platform
 
-from server_manager import __app_name__
+from mc_server_interaction import __app_name__
 
 if platform.system() == "Windows":
     data_dir = pathlib.Path(os.environ["APPDATA"]) / __app_name__

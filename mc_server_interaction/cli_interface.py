@@ -3,12 +3,12 @@ import logging
 
 import aioconsole
 
-from server_manager.log import set_console_log_level
-from server_manager.mc_server_interaction.models import ServerStatus
-from server_manager.server_manger import ServerManager
+from mc_server_interaction.exceptions import DirectoryNotEmptyException
+from mc_server_interaction.log import set_console_log_level
+from mc_server_interaction.mc_server_interaction.models import ServerStatus
+from mc_server_interaction.server_manger import ServerManager
 
 set_console_log_level(logging.DEBUG)
-
 
 menu = """
 1. Create Server
@@ -58,11 +58,16 @@ async def main():
                 if name == "":
                     print("Name cannot be empty")
                     continue
+                if server_manager.name_exists(name):
+                    print("Name already exists")
+                    continue
                 break
 
             print("Creating server...")
-            await server_manager.create_new_server(name, version)
-
+            try:
+                await server_manager.create_new_server(name, version)
+            except DirectoryNotEmptyException:
+                pass
         elif input_text == Options.SHOW:
             servers = server_manager.get_servers()
             if not servers:

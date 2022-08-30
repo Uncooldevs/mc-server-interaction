@@ -3,8 +3,8 @@ import logging
 import os
 from typing import Dict
 
-from server_manager.mc_server_interaction.models import ServerConfig
-from server_manager.paths import data_dir
+from mc_server_interaction.mc_server_interaction.models import ServerConfig
+from mc_server_interaction.paths import data_dir
 
 
 class ManagerDataStore:

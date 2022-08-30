@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from server_manager.server_manger import game_constants
+from mc_server_interaction.server_manger import game_constants
 
 
 @dataclass
