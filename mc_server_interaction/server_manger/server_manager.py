@@ -61,6 +61,13 @@ class ServerManager:
         path = os.path.join(self.config.server_data_dir,
                             f'{"".join(c for c in name.replace(" ", "_") if c.isalnum()).strip()}_{self.config.get_latest_sid()}'
                             )
+
+        config = ServerConfig(path=path, created_at=time.time(), version=version, name=name)
+        self.config.add_server(self.config.get_latest_sid(), config)
+        server = MinecraftServer(config)
+        server.set_status(ServerStatus.INSTALLING)
+        self._servers[str(self.config.get_latest_sid())] = server
+
         if not os.path.exists(path):
             os.makedirs(path)
         if version == "latest":
@@ -84,13 +91,8 @@ class ServerManager:
                     f.write(resp.content)
                 await copy_async(filename, os.path.join(path, "server.jar"))
             else:
+                server.set_status(ServerStatus.NOT_INSTALLED)
                 raise Exception(f"Error downloading server jar for version {version}")
-
-        config = ServerConfig(path=path, created_at=time.time(), version=version, name=name)
-        self.config.add_server(self.config.get_latest_sid(), config)
-        server = MinecraftServer(config)
-        server.set_status(ServerStatus.INSTALLING)
-        self._servers[str(self.config.get_latest_sid())] = server
 
         # TODO interface for world generator settings
         world_generator_settings = WorldGenerationSettings()
@@ -103,6 +105,8 @@ class ServerManager:
         self.logger.info("Write eula file")
         async with aiofile.async_open(os.path.join(path, "eula.txt"), "w") as f:
             await f.write("eula=true")
+
+        server.set_status(ServerStatus.STOPPED)
 
     def get_server(self, sid) -> MinecraftServer:
         return self._servers.get(sid)

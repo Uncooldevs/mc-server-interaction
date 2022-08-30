@@ -31,7 +31,7 @@ class ServerProperties:
                         value = raw_value
 
                 self.__data[key] = value
-            self.logger.debug(f"Loaded {len(self.__data)} entries properties file")
+            self.logger.debug(f"Loaded {len(self.__data)} entries from properties file")
 
     def set(self, key, value):
         self.__data[key] = value
