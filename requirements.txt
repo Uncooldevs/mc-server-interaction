@@ -4,3 +4,5 @@ aiofile
 aioconsole
 mcstatus
 bs4
+cached_property
+psutil
