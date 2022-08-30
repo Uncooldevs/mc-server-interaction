@@ -9,10 +9,10 @@ from cached_property import cached_property_with_ttl
 from mcstatus import JavaServer
 
 from mc_server_interaction.exceptions import ServerRunningException, ServerNotInstalledException
-from mc_server_interaction.mc_server_interaction.models import ServerStatus, Player, ServerConfig, BannedPlayer, \
+from mc_server_interaction.interaction.models import ServerStatus, Player, ServerConfig, BannedPlayer, \
     OPPlayer
-from mc_server_interaction.mc_server_interaction.property_handler import ServerProperties
-from mc_server_interaction.mc_server_interaction.server_process import ServerProcess
+from mc_server_interaction.interaction.property_handler import ServerProperties
+from mc_server_interaction.interaction.server_process import ServerProcess
 
 
 class MinecraftServer:

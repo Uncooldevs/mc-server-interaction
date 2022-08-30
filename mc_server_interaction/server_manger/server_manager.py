@@ -9,11 +9,11 @@ import aiofile
 import aiohttp
 
 from mc_server_interaction.exceptions import DirectoryNotEmptyException, ServerRunningException
-from mc_server_interaction.mc_server_interaction import MinecraftServer
+from mc_server_interaction.interaction import MinecraftServer
 from .data_store import ManagerDataStore
 from .models import WorldGenerationSettings
 from .utils import AvailableMinecraftServerVersions, copy_async
-from ..mc_server_interaction.models import ServerConfig, ServerStatus
+from ..interaction.models import ServerConfig, ServerStatus
 from ..paths import cache_dir
 
 

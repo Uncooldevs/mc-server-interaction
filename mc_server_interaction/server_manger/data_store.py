@@ -3,7 +3,7 @@ import logging
 import os
 from typing import Dict
 
-from mc_server_interaction.mc_server_interaction.models import ServerConfig
+from mc_server_interaction.interaction.models import ServerConfig
 from mc_server_interaction.paths import data_dir
 
 
