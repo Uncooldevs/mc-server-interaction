@@ -57,9 +57,10 @@ class ServerManager:
         self.config.save()
 
     async def create_new_server(self, name, version):
-
+        self.config.increment_sid()
         path = os.path.join(self.config.server_data_dir,
-                            "".join(c for c in name.replace(" ", "_") if c.isalnum()).strip())
+                            f'{"".join(c for c in name.replace(" ", "_") if c.isalnum()).strip()}_{self.config.get_latest_sid()}'
+                            )
         if not os.path.exists(path):
             os.makedirs(path)
         if version == "latest":
@@ -85,7 +86,6 @@ class ServerManager:
             else:
                 raise Exception(f"Error downloading server jar for version {version}")
 
-        self.config.increment_sid()
         config = ServerConfig(path=path, created_at=time.time(), version=version, name=name)
         self.config.add_server(self.config.get_latest_sid(), config)
         server = MinecraftServer(config)
