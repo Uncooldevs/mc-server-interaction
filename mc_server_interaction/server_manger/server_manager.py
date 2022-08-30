@@ -83,16 +83,13 @@ class ServerManager:
             self.logger.info(f"Downloading server jar for version {version}")
             download_url = await self.available_versions.get_download_link(version)
             async with aiohttp.ClientSession() as session:
-                resp = await session.get(download_url)
-
-            if resp.status == 200:
                 filename = str(cache_dir / f"minecraft_server_{version}.jar")
-                with aiofile.async_open(filename, "wb") as f:
-                    f.write(resp.content)
+                async with aiofile.async_open(filename, "wb") as f:
+                    resp = await session.get(download_url)
+                    async for chunk in resp.content.iter_chunked(10 * 1024):
+                        await f.write(chunk)
+
                 await copy_async(filename, os.path.join(path, "server.jar"))
-            else:
-                server.set_status(ServerStatus.NOT_INSTALLED)
-                raise Exception(f"Error downloading server jar for version {version}")
 
         # TODO interface for world generator settings
         world_generator_settings = WorldGenerationSettings()
