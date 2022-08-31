@@ -105,6 +105,16 @@ class MinecraftServer:
     def system_load(self):
         if self.is_running:
             return self.process.get_resource_usage()
+        else:
+            return {"cpu": {
+                "percent": 0
+            },
+                "memory": {
+                    "total": 0,
+                    "used": 0,
+                    "server": 0
+                }
+            }
 
     @cached_property_with_ttl(ttl=30)
     def banned_players(self):
