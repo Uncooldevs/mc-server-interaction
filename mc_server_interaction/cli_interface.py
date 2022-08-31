@@ -94,9 +94,9 @@ async def main():
 
                 print(f"""
 Path: {server.server_config.path}
-Status: {server.get_status().name}
+Status: {server.status.name}
                 """)
-                action = "Start" if server.get_status() == ServerStatus.STOPPED else "Stop"
+                action = "Start" if server.status == ServerStatus.STOPPED else "Stop"
                 print(f"""
 1. {action} Server
 2. Delete Server
@@ -105,8 +105,8 @@ Status: {server.get_status().name}
                 """)
                 user_input = await aioconsole.ainput("Select option: ")
                 if user_input == "1":
-                    print(server.get_status())
-                    if server.get_status() == ServerStatus.STOPPED:
+                    print(server.status)
+                    if server.status == ServerStatus.STOPPED:
                         await server_manager.start_server(sid)
                     else:
                         await server.stop()

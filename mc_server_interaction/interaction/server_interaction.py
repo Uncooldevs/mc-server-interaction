@@ -97,7 +97,8 @@ class MinecraftServer:
             self.process.kill()
             self.set_status(ServerStatus.STOPPED)
 
-    def get_status(self) -> ServerStatus:
+    @property
+    def status(self) -> ServerStatus:
         return self._status
 
     @cached_property_with_ttl(ttl=5)
