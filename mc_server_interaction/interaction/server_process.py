@@ -11,7 +11,10 @@ class Callback:
 
     async def __call__(self, *args, **kwargs):
         for func in self.installed_callbacks:
-            await func(*args, **kwargs)
+            try:
+                await func(*args, **kwargs)
+            except:
+                pass
 
     def add_callback(self, func: Callable):
         self.installed_callbacks.append(func)
