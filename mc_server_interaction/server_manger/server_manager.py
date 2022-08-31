@@ -3,12 +3,12 @@ import logging
 import os
 import shutil
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import aiofile
 import aiohttp
 
-from mc_server_interaction.exceptions import DirectoryNotEmptyException, ServerRunningException
+from mc_server_interaction.exceptions import ServerRunningException
 from mc_server_interaction.interaction import MinecraftServer
 from .data_store import ManagerDataStore
 from .models import WorldGenerationSettings
@@ -66,9 +66,12 @@ class ServerManager:
         self.config.remove_server(sid)
         self.config.save()
 
-    async def create_new_server(self, name, version) -> Tuple[str, MinecraftServer]:
+    async def create_new_server(self, name, version,
+                                world_generation_settings: Optional[WorldGenerationSettings] = None) -> Tuple[
+        str, MinecraftServer]:
         """
         Create necessary files like server.properties, eula.txt
+        :param world_generation_settings: Settings for world generation
         :param name: Name of the server
         :param version: Minecraft version of the server. Accepts 'latest'
         :return: MinecraftServer
@@ -91,14 +94,14 @@ class ServerManager:
         if not os.path.exists(path):
             os.makedirs(path)
 
-        if len(os.listdir(path)) > 0:
-            raise DirectoryNotEmptyException(f"Directory {path} is not empty")
-
         # TODO interface for world generator settings
-        world_generator_settings = WorldGenerationSettings()
+        if not world_generation_settings:
+            world_generation_settings = WorldGenerationSettings()
 
-        for name, value in world_generator_settings:
+        for name, value in world_generation_settings:
             server.properties.set(name, value)
+
+        server.properties.set("level-name", "worlds/world")
 
         server.properties.save()
 
@@ -109,7 +112,7 @@ class ServerManager:
         server.set_status(ServerStatus.STOPPED)
         return latest_sid, server
 
-    async def install_server(self, sid: str, force_redownload: bool=False):
+    async def install_server(self, sid: str, force_redownload: bool = False):
         """
 
         Create server.jar in a blank created server
