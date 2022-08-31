@@ -1,5 +1,5 @@
 
-__version__ = "0.1.0"
+__version__ = "0.1.2"
 __app_name__ = "mc-server-interaction"
 
 from mc_server_interaction.utils.singleton import SingleInstance
