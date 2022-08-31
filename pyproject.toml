@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mc_server_interaction"
-version = "0.1.0"
+version = "0.1.2"
 description = "Module for interacting with Minecraft servers"
 authors = ["Dummerle", "M0rica"]
 license = "GPL 3.0"
