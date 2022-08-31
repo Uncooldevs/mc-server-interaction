@@ -40,3 +40,4 @@ class ServerConfig:
     version: str
     ram: int = 2048
     created_at: float = time.time()
+    installed: bool = True

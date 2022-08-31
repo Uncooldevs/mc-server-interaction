@@ -1,3 +1,8 @@
+
+"""
+This is not for productive usage
+"""
+
 import asyncio
 import logging
 
@@ -65,9 +70,12 @@ async def main():
 
             print("Creating server...")
             try:
-                await server_manager.create_new_server(name, version)
+                new_sid, new_server = await server_manager.create_new_server(name, version)
+                await server_manager.install_server(new_sid)
             except DirectoryNotEmptyException:
                 pass
+            else:
+                print("Server created successfully")
         elif input_text == Options.SHOW:
             servers = server_manager.get_servers()
             if not servers:
