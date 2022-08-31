@@ -13,8 +13,8 @@ class Callback:
         for func in self.installed_callbacks:
             try:
                 await func(*args, **kwargs)
-            except:
-                pass
+            except Exception:
+                self.installed_callbacks.remove(func)
 
     def add_callback(self, func: Callable):
         self.installed_callbacks.append(func)
@@ -25,13 +25,13 @@ class Callbacks:
     exit = Callback()
     error_occurred = Callback()
 
+
 class ServerProcess:
     process: Optional[Process]
     psutil_proc: Optional[psutil.Process]
     callbacks = Callbacks()
     system_metrics: dict = {}
     num_cpus = psutil.cpu_count()
-
 
     async def start(self, command, cwd):
         self.process = await asyncio.create_subprocess_exec(
