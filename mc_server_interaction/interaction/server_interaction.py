@@ -183,7 +183,7 @@ class MinecraftServer:
         self.logger.info(f"Sending command {command} to server")
         await self.process.send_input(command)
 
-    def _update_status_callback(self, output: str):
+    async def _update_status_callback(self, output: str):
         if self._status == ServerStatus.STARTING:
             if "For help, type \"help\"" in output:
                 if self.properties.get("enable-query"):

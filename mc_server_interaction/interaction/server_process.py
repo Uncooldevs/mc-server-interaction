@@ -9,9 +9,9 @@ class Callback:
     def __init__(self):
         self.installed_callbacks = []
 
-    def __call__(self, *args, **kwargs):
+    async def __call__(self, *args, **kwargs):
         for func in self.installed_callbacks:
-            func(*args, **kwargs)
+            await func(*args, **kwargs)
 
     def add_callback(self, func: Callable):
         self.installed_callbacks.append(func)
@@ -21,7 +21,6 @@ class Callbacks:
     stdout = Callback()
     exit = Callback()
     error_occurred = Callback()
-
 
 class ServerProcess:
     process: Optional[Process]
@@ -49,8 +48,8 @@ class ServerProcess:
                 output = output.rstrip("\n")
                 self.stdout_since_last_send += output
                 self.logs += output
-                self.callbacks.stdout(output)
-        self.callbacks.exit(self.process.returncode, await self.process.stdout.read())
+                await self.callbacks.stdout(output)
+        await self.callbacks.exit(self.process.returncode, await self.process.stdout.read())
         self.psutil_proc = None
 
     def kill(self):
