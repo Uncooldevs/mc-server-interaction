@@ -28,8 +28,7 @@ class ServerProcess:
     callbacks = Callbacks()
     system_metrics: dict = {}
     num_cpus = psutil.cpu_count()
-    stdout_since_last_send = ""
-    logs = ""
+
 
     async def start(self, command, cwd):
         self.process = await asyncio.create_subprocess_exec(
@@ -46,8 +45,6 @@ class ServerProcess:
             if output:
                 output = output.decode("utf-8")
                 output = output.rstrip("\n")
-                self.stdout_since_last_send += output
-                self.logs += output
                 await self.callbacks.stdout(output)
         await self.callbacks.exit(self.process.returncode, await self.process.stdout.read())
         self.psutil_proc = None

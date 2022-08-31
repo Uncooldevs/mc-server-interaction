@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+from collections import deque
 from datetime import datetime
 from typing import Optional, Union
 
@@ -22,6 +23,7 @@ class MinecraftServer:
     _status: ServerStatus
     properties: ServerProperties
     _mcstatus_server: Optional[JavaServer]
+    log: deque
 
     def __init__(self, server_config: ServerConfig):
         self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}:{server_config.name}")
@@ -30,6 +32,7 @@ class MinecraftServer:
         self._status = ServerStatus.STOPPED
         self.process = None
         self._mcstatus_server = None
+        self.log = deque(maxlen=128)
 
         self.load_properties()
 
@@ -179,11 +182,16 @@ class MinecraftServer:
     def is_online(self) -> bool:
         return self.is_running and self._status == ServerStatus.RUNNING
 
+    @property
+    def logs(self):
+        return "\n".join(self.log) + "\n"
+
     async def _send_command(self, command):
         self.logger.info(f"Sending command {command} to server")
         await self.process.send_input(command)
 
     async def _update_status_callback(self, output: str):
+        self.log.append(output)
         if self._status == ServerStatus.STARTING:
             if "For help, type \"help\"" in output:
                 if self.properties.get("enable-query"):
