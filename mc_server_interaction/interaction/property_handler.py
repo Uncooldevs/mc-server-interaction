@@ -45,7 +45,7 @@ class ServerProperties:
     def save(self, override_filename: Optional[str] = None):
         with open(override_filename or self.file_name, "w", encoding="utf-8") as f:
             for key, raw_value in self.__data.items():
-                if type(raw_value) == bool:
+                if type(raw_value) is bool:
                     value = str(raw_value).lower()
                 elif raw_value is None:
                     value = ""
