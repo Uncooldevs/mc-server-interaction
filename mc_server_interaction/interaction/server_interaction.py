@@ -151,6 +151,15 @@ class MinecraftServer:
         return op_players
 
     @cached_property_with_ttl(ttl=10)
+    def online_players(self):
+        online_players = []
+        if self._mcstatus_server is not None:
+            self.logger.info("Retrieving online players via query port")
+            online_players = self._mcstatus_server.query().players.names
+        online_players = [Player(name=name, is_online=True) for name in online_players]
+        return online_players
+
+    @cached_property_with_ttl(ttl=10)
     def players(self):
         players = []
         banned_players = self.banned_players
@@ -160,20 +169,22 @@ class MinecraftServer:
                    op_players))
         other_players = banned_players + op_players
 
-        online_player_names = []
-        if self._mcstatus_server is not None:
-            self.logger.info("Retrieving online players via query port")
-            online_player_names = self._mcstatus_server.query().players.names
-        for name in online_player_names:
-            existing_player = next((player for player in other_players if player.name == name), None)
+        online_players = self.online_players
+        print(online_players)
+        for player in online_players:
+            existing_player = next((p for p in other_players if p.name == player.name), None)
             if existing_player is not None:
                 other_players.remove(existing_player)
                 existing_player.is_online = True
-                players.append(existing_player)
-            else:
-                players.append(Player(name, is_online=True))
-        players += other_players
-        return players
+                #players.append(existing_player)
+        #players += other_players
+
+        players_dict = {
+            "online_players": players,
+            "op_players": op_players,
+            "banned_players": banned_players
+        }
+        return players_dict
 
     async def send_command(self, command: str):
         if self.is_online:
