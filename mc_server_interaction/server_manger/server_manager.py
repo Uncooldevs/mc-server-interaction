@@ -32,12 +32,6 @@ class ServerManager:
                 server.set_status(ServerStatus.NOT_INSTALLED)
             self._servers[sid] = server
 
-    async def start_server(self, sid):
-        await self._servers.get(sid).start()
-
-    async def stop_server(self, sid):
-        await self._servers.get(sid).stop()
-
     async def stop_all_servers(self):
         await asyncio.gather(*[server.stop() for server in self._servers.values() if server.is_running])
 

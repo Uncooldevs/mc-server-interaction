@@ -107,7 +107,7 @@ Status: {server.status.name}
                 if user_input == "1":
                     print(server.status)
                     if server.status == ServerStatus.STOPPED:
-                        await server_manager.start_server(sid)
+                        await server.start()
                     else:
                         await server.stop()
 
