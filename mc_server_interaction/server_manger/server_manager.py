@@ -102,6 +102,7 @@ class ServerManager:
             server.properties.set(name, value)
 
         server.properties.set("level-name", "worlds/world")
+        server.properties.set("enable-query", True)
 
         server.properties.save()
 
