@@ -166,18 +166,15 @@ class MinecraftServer:
         op_players = self.op_players
         op_players = list(
             filter(lambda player: not any(banned_player.name == player.name for banned_player in banned_players),
-                   op_players))
-        other_players = banned_players + op_players
+                   op_players))  # players can be op and banned for some reason, so filter ops
 
         online_players = self.online_players
-        print(online_players)
         for player in online_players:
-            existing_player = next((p for p in other_players if p.name == player.name), None)
-            if existing_player is not None:
-                other_players.remove(existing_player)
-                existing_player.is_online = True
-                #players.append(existing_player)
-        #players += other_players
+            op_player = next((p for p in op_players if p.name == player.name), None)
+            if op_player is not None:
+                op_player.is_online = True
+                player.is_op = True
+            players.append(player)
 
         players_dict = {
             "online_players": players,
