@@ -61,10 +61,12 @@ class ServerManager:
         self.config.save()
 
     async def create_new_server(self, name, version,
-                                world_generation_settings: Optional[WorldGenerationSettings] = None) -> Tuple[
-        str, MinecraftServer]:
+                                world_generation_settings: Optional[WorldGenerationSettings] = None,
+                                world_path: str = None) \
+            -> Tuple[str, MinecraftServer]:
         """
         Create necessary files like server.properties, eula.txt
+        :param world_path: Path to world directory
         :param world_generation_settings: Settings for world generation
         :param name: Name of the server
         :param version: Minecraft version of the server. Accepts 'latest'
@@ -104,14 +106,17 @@ class ServerManager:
         async with aiofile.async_open(os.path.join(path, "eula.txt"), "w") as f:
             await f.write("eula=true")
 
+        if world_path and os.path.isdir(world_path):
+            shutil.copytree(world_path, os.path.join(path, "worlds", "world"))
+        elif not os.path.isdir(world_path):
+            self.logger.error("Given world does not exist")
+
         server.set_status(ServerStatus.STOPPED)
         return latest_sid, server
 
     async def install_server(self, sid: str, force_redownload: bool = False):
         """
-
         Create server.jar in a blank created server
-
         :param force_redownload: Redownload server jar
         :param sid: sid of the server
         :return:
