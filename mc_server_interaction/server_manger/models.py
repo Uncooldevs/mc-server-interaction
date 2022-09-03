@@ -10,8 +10,10 @@ class WorldGenerationSettings:
     generate_structures: bool = False
 
     def __iter__(self):
-        return iter([
-            ("level-seed", self.level_seed),
-            ("level-type", self.level_type),
-            ("generate-structures", self.generate_structures),
-        ])
+        return iter(
+            [
+                ("level-seed", self.level_seed),
+                ("level-type", self.level_type),
+                ("generate-structures", self.generate_structures),
+            ]
+        )

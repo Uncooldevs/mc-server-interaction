@@ -35,10 +35,11 @@ class ServerProcess:
 
     async def start(self, command, cwd):
         self.process = await asyncio.create_subprocess_exec(
-            *command, stdout=asyncio.subprocess.PIPE,
+            *command,
+            stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             stdin=asyncio.subprocess.PIPE,
-            cwd=cwd
+            cwd=cwd,
         )
         self.psutil_proc = psutil.Process(self.process.pid)
 
@@ -49,7 +50,9 @@ class ServerProcess:
                 output = output.decode("utf-8")
                 output = output.rstrip("\n")
                 await self.callbacks.stdout(output)
-        await self.callbacks.exit(self.process.returncode, await self.process.stdout.read())
+        await self.callbacks.exit(
+            self.process.returncode, await self.process.stdout.read()
+        )
         self.psutil_proc = None
 
     def kill(self):
@@ -75,7 +78,7 @@ class ServerProcess:
             "memory": {
                 "total": memory_system.total,
                 "used": memory_system.used,
-                "server": memory_server.uss
-            }
+                "server": memory_server.uss,
+            },
         }
         return self.system_metrics

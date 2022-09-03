@@ -33,16 +33,15 @@ class ServerManager:
             self._servers[sid] = server
 
     async def stop_all_servers(self):
-        await asyncio.gather(*[server.stop() for server in self._servers.values() if server.is_running])
+        await asyncio.gather(
+            *[server.stop() for server in self._servers.values() if server.is_running]
+        )
 
     def get_servers(self) -> Dict[str, MinecraftServer]:
         """
         :return: Dictionary of sid: MinecraftServer
         """
         return self._servers
-
-    def name_exists(self, name: str):
-        return len(list(filter(lambda server: server.server_config.name == name, list(self._servers.values())))) != 0
 
     def delete_server(self, sid):
         """
@@ -60,10 +59,13 @@ class ServerManager:
         self.config.remove_server(sid)
         self.config.save()
 
-    async def create_new_server(self, name, version,
-                                world_generation_settings: Optional[WorldGenerationSettings] = None,
-                                world_path: str = None) \
-            -> Tuple[str, MinecraftServer]:
+    async def create_new_server(
+            self,
+            name,
+            version,
+            world_generation_settings: Optional[WorldGenerationSettings] = None,
+            world_path: str = None,
+    ) -> Tuple[str, MinecraftServer]:
         """
         Create necessary files like server.properties, eula.txt
         :param world_path: Path to world directory
@@ -74,13 +76,20 @@ class ServerManager:
         """
         self.config.increment_sid()
         latest_sid = str(self.config.get_latest_sid())
-        path = os.path.join(self.config.server_data_dir,
-                            f'{"".join(c for c in name.replace(" ", "_") if c.isalnum()).strip()}_{latest_sid}'
-                            )
+        path = os.path.join(
+            self.config.server_data_dir,
+            f'{"".join(c for c in name.replace(" ", "_") if c.isalnum()).strip()}_{latest_sid}',
+        )
         if version == "latest":
             version = self.available_versions.get_latest_version()
 
-        config = ServerConfig(path=path, created_at=time.time(), version=version, name=name, installed=False)
+        config = ServerConfig(
+            path=path,
+            created_at=time.time(),
+            version=version,
+            name=name,
+            installed=False,
+        )
         self.config.add_server(latest_sid, config)
 
         server = MinecraftServer(config)
@@ -125,9 +134,15 @@ class ServerManager:
         server.set_status(ServerStatus.INSTALLING)
         version = server.server_config.version
         path = server.server_config.path
-        if os.path.exists(str(cache_dir / f"minecraft_server_{version}.jar")) and not force_redownload:
+        if (
+                os.path.exists(str(cache_dir / f"minecraft_server_{version}.jar"))
+                and not force_redownload
+        ):
             self.logger.info(f"Using cached server jar for version {version}")
-            await copy_async(str(cache_dir / f"minecraft_server_{version}.jar"), os.path.join(path, "server.jar"))
+            await copy_async(
+                str(cache_dir / f"minecraft_server_{version}.jar"),
+                os.path.join(path, "server.jar"),
+            )
 
         else:
             self.logger.info(f"Downloading server jar for version {version}")

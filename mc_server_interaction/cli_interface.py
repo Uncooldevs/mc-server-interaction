@@ -1,4 +1,3 @@
-
 """
 This is not for productive usage
 """
@@ -51,9 +50,16 @@ async def main():
         elif input_text == Options.CREATE:
             while True:
                 version = await aioconsole.ainput(
-                    "Enter version ('help' to list all available versions(many), Leave empty to use latest): ")
+                    "Enter version ('help' to list all available versions(many), Leave empty to use latest): "
+                )
                 if version == "help":
-                    print(" ".join(list(server_manager.available_versions.available_versions.keys())))
+                    print(
+                        " ".join(
+                            list(
+                                server_manager.available_versions.available_versions.keys()
+                            )
+                        )
+                    )
                     continue
                 break
             if version == "":
@@ -63,14 +69,13 @@ async def main():
                 if name == "":
                     print("Name cannot be empty")
                     continue
-                if server_manager.name_exists(name):
-                    print("Name already exists")
-                    continue
                 break
 
             print("Creating server...")
             try:
-                new_sid, new_server = await server_manager.create_new_server(name, version)
+                new_sid, new_server = await server_manager.create_new_server(
+                    name, version
+                )
                 await server_manager.install_server(new_sid)
             except DirectoryNotEmptyException:
                 pass
@@ -92,17 +97,21 @@ async def main():
 
             while True:
 
-                print(f"""
+                print(
+                    f"""
 Path: {server.server_config.path}
 Status: {server.status.name}
-                """)
+                """
+                )
                 action = "Start" if server.status == ServerStatus.STOPPED else "Stop"
-                print(f"""
+                print(
+                    f"""
 1. {action} Server
 2. Delete Server
 3. Send command
 4. Go back            
-                """)
+                """
+                )
                 user_input = await aioconsole.ainput("Select option: ")
                 if user_input == "1":
                     print(server.status)
@@ -117,7 +126,9 @@ Status: {server.status.name}
                     print("Server deleted")
                     break
                 elif user_input == "3":
-                    await server.send_command(await aioconsole.ainput("Enter command: "))
+                    await server.send_command(
+                        await aioconsole.ainput("Enter command: ")
+                    )
                 elif user_input == "4":
                     break
 
@@ -130,5 +141,5 @@ def run_app():
     asyncio.run(main())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_app()

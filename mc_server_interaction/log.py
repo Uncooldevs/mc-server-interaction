@@ -16,19 +16,23 @@ class LogNameFilter(logging.Filter):
 
 def setup_logging():
     log_path = str(data_dir / "logs")
-    formatter = logging.Formatter("[%(asctime)s] [%(name_last)s] %(levelname)s: %(message)s", "%Y-%m-%d %H:%M:%S")
+    formatter = logging.Formatter(
+        "[%(asctime)s] [%(name_last)s] %(levelname)s: %(message)s", "%Y-%m-%d %H:%M:%S"
+    )
 
     main_logger = logging.getLogger("MCServerInteraction")
     main_logger.setLevel(logging.DEBUG)
 
     if not os.path.exists(log_path):
         os.mkdir(log_path)
-    file_handler = logging.handlers.TimedRotatingFileHandler(f"{log_path}/MCServerInteraction.log", when="midnight")
+    file_handler = logging.handlers.TimedRotatingFileHandler(
+        f"{log_path}/MCServerInteraction.log", when="midnight"
+    )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
     file_handler.addFilter(LogNameFilter())
     main_logger.addHandler(file_handler)
-    
+
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
@@ -41,4 +45,3 @@ def set_console_log_level(level: Union[str, int]):
         if type(handler) == logging.StreamHandler:
             handler.setLevel(level)
             break
-

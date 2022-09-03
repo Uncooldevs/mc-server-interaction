@@ -1,4 +1,3 @@
-
 class Difficulty:
     PEACEFUL = "peaceful"
     EASY = "easy"
@@ -11,6 +10,3 @@ class LevelTypes:
     FLAT = "flat"
     LARGE_BIOMES = "large_biomes"
     AMPLIFIED = "amplified"
-
-
-

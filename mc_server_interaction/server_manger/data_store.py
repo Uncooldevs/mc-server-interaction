@@ -15,7 +15,9 @@ class ManagerDataStore:
     server_data_dir = str(data_dir / "servers")
 
     def __init__(self):
-        self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}")
+        self.logger = logging.getLogger(
+            f"MCServerInteraction.{self.__class__.__name__}"
+        )
         self._servers = {}
         self.load_data()
 
@@ -59,8 +61,14 @@ class ManagerDataStore:
 
     def save(self):
         with open(self.data_file, "w") as f:
-            json.dump({
-                "servers": {sid: config.__dict__ for sid, config in self._servers.items()},
-                "latest_sid": self._latest_sid,
-                "server_data_dir": self.server_data_dir
-            }, f, indent=4)
+            json.dump(
+                {
+                    "servers": {
+                        sid: config.__dict__ for sid, config in self._servers.items()
+                    },
+                    "latest_sid": self._latest_sid,
+                    "server_data_dir": self.server_data_dir,
+                },
+                f,
+                indent=4,
+            )

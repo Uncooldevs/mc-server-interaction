@@ -11,7 +11,9 @@ elif platform.system() == "Linux":
     data_dir = pathlib.Path(f"~/.local/share/{__app_name__}").expanduser()
     cache_dir = pathlib.Path(f"~/.cache/{__app_name__}").expanduser()
 elif platform.system() == "Darwin":
-    data_dir = pathlib.Path(f"~/Library/Application Support/{__app_name__}").expanduser()
+    data_dir = pathlib.Path(
+        f"~/Library/Application Support/{__app_name__}"
+    ).expanduser()
     cache_dir = pathlib.Path(f"~/Library/Caches/{__app_name__}").expanduser()
 else:
     raise Exception(f"Unsupported platform: {platform.system()}")

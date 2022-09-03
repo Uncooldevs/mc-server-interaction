@@ -8,7 +8,9 @@ class ServerProperties:
     __data: dict
 
     def __init__(self, file_name: str):
-        self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}")
+        self.logger = logging.getLogger(
+            f"MCServerInteraction.{self.__class__.__name__}"
+        )
         self.file_name = file_name
         self.__data = {}
         if not os.path.exists(file_name):

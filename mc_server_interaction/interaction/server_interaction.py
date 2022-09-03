@@ -9,9 +9,17 @@ from typing import Optional, Union
 from cached_property import cached_property_with_ttl
 from mcstatus import JavaServer
 
-from mc_server_interaction.exceptions import ServerRunningException, ServerNotInstalledException
-from mc_server_interaction.interaction.models import ServerStatus, Player, ServerConfig, BannedPlayer, \
-    OPPlayer
+from mc_server_interaction.exceptions import (
+    ServerRunningException,
+    ServerNotInstalledException,
+)
+from mc_server_interaction.interaction.models import (
+    ServerStatus,
+    Player,
+    ServerConfig,
+    BannedPlayer,
+    OPPlayer,
+)
 from mc_server_interaction.interaction.property_handler import ServerProperties
 from mc_server_interaction.interaction.server_process import ServerProcess
 
@@ -26,7 +34,9 @@ class MinecraftServer:
     log: deque
 
     def __init__(self, server_config: ServerConfig):
-        self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}:{server_config.name}")
+        self.logger = logging.getLogger(
+            f"MCServerInteraction.{self.__class__.__name__}:{server_config.name}"
+        )
         self.server_config = server_config
 
         self._status = ServerStatus.STOPPED
@@ -38,7 +48,9 @@ class MinecraftServer:
 
     def load_properties(self):
         properties_file = os.path.join(self.server_config.path, "server.properties")
-        self.logger.debug(f"Attempting to load server properties from {properties_file}")
+        self.logger.debug(
+            f"Attempting to load server properties from {properties_file}"
+        )
         self.properties = ServerProperties(properties_file)
 
     def save_properties(self):
@@ -58,15 +70,24 @@ class MinecraftServer:
     async def start(self):
         if self.is_running:
             raise ServerRunningException()
-        if self._status == ServerStatus.NOT_INSTALLED or self._status == ServerStatus.INSTALLING:
+        if (
+                self._status == ServerStatus.NOT_INSTALLED
+                or self._status == ServerStatus.INSTALLING
+        ):
             raise ServerNotInstalledException()
         jar_path = os.path.join(self.server_config.path, "server.jar")
         if not os.path.exists(jar_path):
             raise FileNotFoundError()
         self.logger.info("Starting server")
         self.properties.save()
-        command = ["java", f"-Xmx{self.server_config.ram}M", f"-Xms{self.server_config.ram}M", "-jar",
-                   jar_path, "--nogui"]
+        command = [
+            "java",
+            f"-Xmx{self.server_config.ram}M",
+            f"-Xms{self.server_config.ram}M",
+            "-jar",
+            jar_path,
+            "--nogui",
+        ]
         self.process = ServerProcess()
         await self.process.start(command, self.server_config.path)
         self.logger.debug("Create asyncio task for stdout callback")
@@ -106,27 +127,26 @@ class MinecraftServer:
         if self.is_running:
             return self.process.get_resource_usage()
         else:
-            return {"cpu": {
-                "percent": 0
-            },
-                "memory": {
-                    "total": 0,
-                    "used": 0,
-                    "server": 0
-                }
+            return {
+                "cpu": {"percent": 0},
+                "memory": {"total": 0, "used": 0, "server": 0},
             }
 
     @cached_property_with_ttl(ttl=30)
     def banned_players(self):
         banned_players = []
-        banned_players_file = os.path.join(self.server_config.path, "banned-players.json")
+        banned_players_file = os.path.join(
+            self.server_config.path, "banned-players.json"
+        )
         if os.path.isfile(banned_players_file):
             self.logger.debug(f"Loading banned players from {banned_players_file}")
             with open(banned_players_file, "r") as f:
                 data = json.load(f)
             for player_data in data:
                 name = player_data["name"]
-                timestamp = datetime.strptime(player_data["created"].split(" +")[0], "%Y-%m-%d %H:%M:%S").timestamp()
+                timestamp = datetime.strptime(
+                    player_data["created"].split(" +")[0], "%Y-%m-%d %H:%M:%S"
+                ).timestamp()
                 player = BannedPlayer(name)
                 player.is_banned = True
                 player.banned_since = timestamp
@@ -165,8 +185,14 @@ class MinecraftServer:
         banned_players = self.banned_players
         op_players = self.op_players
         op_players = list(
-            filter(lambda player: not any(banned_player.name == player.name for banned_player in banned_players),
-                   op_players))  # players can be op and banned for some reason, so filter ops
+            filter(
+                lambda player: not any(
+                    banned_player.name == player.name
+                    for banned_player in banned_players
+                ),
+                op_players,
+            )
+        )  # players can be op and banned for some reason, so filter ops
 
         online_players = self.online_players
         for player in online_players:
@@ -179,7 +205,7 @@ class MinecraftServer:
         players_dict = {
             "online_players": players,
             "op_players": op_players,
-            "banned_players": banned_players
+            "banned_players": banned_players,
         }
         return players_dict
 
@@ -212,13 +238,18 @@ class MinecraftServer:
     async def _update_status_callback(self, output: str):
         self.log.append(output)
         if self._status == ServerStatus.STARTING:
-            if "For help, type \"help\"" in output:
+            if 'For help, type "help"' in output:
                 if self.properties.get("enable-query"):
-                    self._mcstatus_server = JavaServer("localhost", self.properties.get("server-port"))
+                    self._mcstatus_server = JavaServer(
+                        "localhost", self.properties.get("server-port")
+                    )
                 self.set_status(ServerStatus.RUNNING)
         if "[Server thread/INFO]: Stopping the server" in output:
             self.set_status(ServerStatus.STOPPING)
-        if "[Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved" in output:
+        if (
+                "[Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved"
+                in output
+        ):
             self._mcstatus_server = None
             self.process = None
             self.set_status(ServerStatus.STOPPED)

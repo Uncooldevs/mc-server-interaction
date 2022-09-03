@@ -1,5 +1,3 @@
-
-
 class MCServerInteractionException(Exception):
     pass
 
