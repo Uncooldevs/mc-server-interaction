@@ -44,6 +44,9 @@ class ServerProperties:
     def __str__(self):
         return str(self.__data)
 
+    def to_dict(self):
+        return self.__data
+
     def save(self, override_filename: Optional[str] = None):
         with open(override_filename or self.file_name, "w", encoding="utf-8") as f:
             for key, raw_value in self.__data.items():
