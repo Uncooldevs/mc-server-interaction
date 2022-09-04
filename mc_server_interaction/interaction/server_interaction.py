@@ -35,7 +35,7 @@ class MinecraftServer:
 
     def __init__(self, server_config: ServerConfig):
         self.logger = logging.getLogger(
-            f"MCServerInteraction.{self.__class__.__name__}:{server_config.name}"
+            f"MCServerInteraction.{self.__class__.__name__}:{server_config.name.replace('.', '_')}"
         )
         self.server_config = server_config
 
@@ -45,6 +45,8 @@ class MinecraftServer:
         self.log = deque(maxlen=128)
 
         self.load_properties()
+
+        asyncio.create_task(self._update_loop())
 
     def load_properties(self):
         properties_file = os.path.join(self.server_config.path, "server.properties")
@@ -253,3 +255,10 @@ class MinecraftServer:
             self._mcstatus_server = None
             self.process = None
             self.set_status(ServerStatus.STOPPED)
+
+    async def _update_loop(self):
+        while True:
+            if self._status not in [ServerStatus.STOPPED, ServerStatus.NOT_INSTALLED, ServerStatus.INSTALLING]:
+                if not self.is_running:
+                    self.set_status(ServerStatus.STOPPED)
+            await asyncio.sleep(3)
