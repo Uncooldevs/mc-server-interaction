@@ -28,8 +28,6 @@ class ServerManager:
         self.config = ManagerDataStore()
         for sid, server_config in self.config.get_servers().items():
             server = MinecraftServer(server_config)
-            if not server.server_config.installed:
-                server.set_status(ServerStatus.NOT_INSTALLED)
             self._servers[sid] = server
 
     async def stop_all_servers(self):

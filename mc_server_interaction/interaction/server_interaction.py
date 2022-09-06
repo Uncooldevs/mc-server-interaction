@@ -50,8 +50,10 @@ class MinecraftServer:
             f"MCServerInteraction.{self.__class__.__name__}:{server_config.name.replace('.', '_')}"
         )
         self.server_config = server_config
-
-        self._status = ServerStatus.STOPPED
+        if self.server_config.installed:
+            self._status = ServerStatus.STOPPED
+        else:
+            self._status = ServerStatus.NOT_INSTALLED
         self.process = None
         self._mcstatus_server = None
         self.log = deque(maxlen=128)
