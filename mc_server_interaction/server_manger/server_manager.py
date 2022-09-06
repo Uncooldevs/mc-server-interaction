@@ -93,7 +93,7 @@ class ServerManager:
         self.config.add_server(latest_sid, config)
 
         server = MinecraftServer(config)
-        server.set_status(ServerStatus.NOT_INSTALLED)
+        await server.set_status(ServerStatus.NOT_INSTALLED)
         self._servers[latest_sid] = server
         self.config.save()
         if not os.path.exists(path):
@@ -115,12 +115,13 @@ class ServerManager:
         async with aiofile.async_open(os.path.join(path, "eula.txt"), "w") as f:
             await f.write("eula=true")
 
-        if world_path and os.path.isdir(world_path):
-            shutil.copytree(world_path, os.path.join(path, "worlds", "world"))
-        elif not os.path.isdir(world_path):
-            self.logger.error("Given world does not exist")
+        if world_path:
+            if os.path.isdir(world_path):
+                shutil.copytree(world_path, os.path.join(path, "worlds", "world"))
+            elif not os.path.isdir(world_path):
+                self.logger.error("Given world does not exist")
 
-        server.set_status(ServerStatus.STOPPED)
+        await server.set_status(ServerStatus.STOPPED)
         return latest_sid, server
 
     async def install_server(self, sid: str, force_redownload: bool = False):
@@ -131,7 +132,7 @@ class ServerManager:
         :return:
         """
         server = self._servers.get(sid)
-        server.set_status(ServerStatus.INSTALLING)
+        await server.set_status(ServerStatus.INSTALLING)
         version = server.server_config.version
         path = server.server_config.path
         if (
@@ -156,7 +157,7 @@ class ServerManager:
 
                 await copy_async(filename, os.path.join(path, "server.jar"))
 
-        server.set_status(ServerStatus.STOPPED)
+        await server.set_status(ServerStatus.STOPPED)
         server.server_config.installed = True
         self.config.save()
 

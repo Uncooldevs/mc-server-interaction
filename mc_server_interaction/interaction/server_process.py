@@ -13,17 +13,22 @@ class Callback:
         for func in self.installed_callbacks:
             try:
                 await func(*args, **kwargs)
-            except Exception:
+            except Exception as e:
+                print(e)
                 self.installed_callbacks.remove(func)
+
+    def __len__(self):
+        return len(self.installed_callbacks)
 
     def add_callback(self, func: Callable):
         self.installed_callbacks.append(func)
 
 
 class Callbacks:
-    stdout = Callback()
-    exit = Callback()
-    error_occurred = Callback()
+    def __init__(self):
+        self.stdout = Callback()
+        self.exit = Callback()
+        self.error_occurred = Callback()
 
 
 class ServerProcess:

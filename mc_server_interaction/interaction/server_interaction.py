@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 import json
 import logging
 import os
@@ -21,7 +22,17 @@ from mc_server_interaction.interaction.models import (
     OPPlayer,
 )
 from mc_server_interaction.interaction.property_handler import ServerProperties
-from mc_server_interaction.interaction.server_process import ServerProcess
+from mc_server_interaction.interaction.server_process import ServerProcess, Callback
+
+
+class ServerCallbacks:
+
+    def __init__(self):
+        self.output = Callback()
+        self.status = Callback()
+        self.properties = Callback()
+        self.system_metrics = Callback()
+        self.players = Callback()
 
 
 class MinecraftServer:
@@ -32,6 +43,7 @@ class MinecraftServer:
     properties: ServerProperties
     _mcstatus_server: Optional[JavaServer]
     log: deque
+    callbacks: ServerCallbacks
 
     def __init__(self, server_config: ServerConfig):
         self.logger = logging.getLogger(
@@ -43,6 +55,7 @@ class MinecraftServer:
         self.process = None
         self._mcstatus_server = None
         self.log = deque(maxlen=128)
+        self.callbacks = ServerCallbacks()
 
         self.load_properties()
 
@@ -65,9 +78,11 @@ class MinecraftServer:
     def set_property(self, key: str, value: Union[str, int, float, bool]):
         self.properties.set(key, value)
 
-    def set_status(self, status: ServerStatus):
-        self.logger.debug(f"Setting server status to {status}")
-        self._status = status
+    async def set_status(self, status: ServerStatus):
+        if self._status != status:
+            self.logger.debug(f"Setting server status to {status}")
+            self._status = status
+            await self.callbacks.status(status.name)
 
     async def start(self):
         if self.is_running:
@@ -96,13 +111,13 @@ class MinecraftServer:
         asyncio.create_task(self.process.read_output())
 
         self.process.callbacks.stdout.add_callback(self._update_status_callback)
-        self.set_status(ServerStatus.STARTING)
+        await self.set_status(ServerStatus.STARTING)
 
     async def stop(self, timeout=60):
         if self.is_online:
             self.logger.info("Stopping server")
             await self.process.send_input("stop")
-            self.set_status(ServerStatus.STOPPING)
+            await self.set_status(ServerStatus.STOPPING)
             for i in range(timeout):
                 await asyncio.sleep(1)
                 if not self.is_online:
@@ -118,21 +133,19 @@ class MinecraftServer:
         if self.is_running:
             self.logger.info("Killing server process")
             self.process.kill()
-            self.set_status(ServerStatus.STOPPED)
 
     @property
     def status(self) -> ServerStatus:
         return self._status
 
     @cached_property_with_ttl(ttl=5)
-    def system_load(self):
+    def system_load(self) -> dict:
         if self.is_running:
             return self.process.get_resource_usage()
-        else:
-            return {
-                "cpu": {"percent": 0},
-                "memory": {"total": 0, "used": 0, "server": 0},
-            }
+        return {
+            "cpu": {"percent": 0},
+            "memory": {"total": 0, "used": 0, "server": 0},
+        }
 
     @cached_property_with_ttl(ttl=30)
     def banned_players(self):
@@ -231,7 +244,7 @@ class MinecraftServer:
 
     @property
     def logs(self):
-        return "\n".join(self.log) + "\n"
+        return "\n".join(self.log) + ("\n" if self.log else "")
 
     async def _send_command(self, command):
         self.logger.info(f"Sending command {command} to server")
@@ -239,26 +252,54 @@ class MinecraftServer:
 
     async def _update_status_callback(self, output: str):
         self.log.append(output)
+        await self.callbacks.output(output)
         if self._status == ServerStatus.STARTING:
             if 'For help, type "help"' in output:
                 if self.properties.get("enable-query"):
                     self._mcstatus_server = JavaServer(
                         "localhost", self.properties.get("server-port")
                     )
-                self.set_status(ServerStatus.RUNNING)
+                await self.set_status(ServerStatus.RUNNING)
         if "[Server thread/INFO]: Stopping the server" in output:
-            self.set_status(ServerStatus.STOPPING)
+            await self.set_status(ServerStatus.STOPPING)
         if (
                 "[Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved"
                 in output
         ):
             self._mcstatus_server = None
             self.process = None
-            self.set_status(ServerStatus.STOPPED)
+            await self.set_status(ServerStatus.STOPPED)
 
     async def _update_loop(self):
+        callbacks = {
+            "players": self.callbacks.players,
+            "system_metrics": self.callbacks.system_metrics
+        }
+        old_variables = {
+            "system_metrics": None,
+            "players": None
+        }
         while True:
             if self._status not in [ServerStatus.STOPPED, ServerStatus.NOT_INSTALLED, ServerStatus.INSTALLING]:
                 if not self.is_running:
-                    self.set_status(ServerStatus.STOPPED)
-            await asyncio.sleep(3)
+                    await self.set_status(ServerStatus.STOPPED)
+
+            for callback_name in callbacks.keys():
+                callback = callbacks[callback_name]
+                value = None
+                if len(callback) > 0:
+                    if callback_name == "players":
+                        players = self.players
+                        players = {
+                            "online_players": [dataclasses.asdict(player) for player in players["online_players"]],
+                            "op_players": [dataclasses.asdict(player) for player in players["op_players"]],
+                            "banned_players": [dataclasses.asdict(player) for player in players["banned_players"]]
+                        }
+                        value = players
+                    elif callback_name == "system_metrics":
+                        value = self.system_load
+                if value != old_variables[callback_name]:
+                    await callback(value)
+                    old_variables[callback_name] = value
+
+            await asyncio.sleep(1)
