@@ -5,7 +5,7 @@ import shutil
 import time
 from typing import Dict, Tuple, Optional
 
-import aiofile
+import aiofiles
 import aiohttp
 
 from mc_server_interaction.exceptions import ServerRunningException
@@ -110,7 +110,7 @@ class ServerManager:
         server.properties.save()
 
         self.logger.info("Write eula file")
-        async with aiofile.async_open(os.path.join(path, "eula.txt"), "w") as f:
+        async with aiofiles.open(os.path.join(path, "eula.txt"), "w") as f:
             await f.write("eula=true")
 
         if world_path:
@@ -148,7 +148,7 @@ class ServerManager:
             download_url = await self.available_versions.get_download_link(version)
             async with aiohttp.ClientSession() as session:
                 filename = str(cache_dir / f"minecraft_server_{version}.jar")
-                async with aiofile.async_open(filename, "wb") as f:
+                async with aiofiles.open(filename, "wb") as f:
                     resp = await session.get(download_url)
                     async for chunk in resp.content.iter_chunked(10 * 1024):
                         await f.write(chunk)

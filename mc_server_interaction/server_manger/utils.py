@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-import aiofile
+import aiofiles
 import aiohttp
 from bs4 import BeautifulSoup
 
@@ -35,7 +35,7 @@ class AvailableMinecraftServerVersions:
 
     async def _get_available_minecraft_versions(self):
         if os.path.exists(self.filename):
-            async with aiofile.async_open(self.filename, "r") as f:
+            async with aiofiles.open(self.filename, "r") as f:
                 data = json.loads(await f.read())
             timestamp = data["timestamp"]
             timestamp = datetime.datetime.fromtimestamp(float(timestamp))
@@ -70,7 +70,7 @@ class AvailableMinecraftServerVersions:
                 ] = "https://mcversions.net" + version.find("a", text="Download").get(
                     "href"
                 )
-        async with aiofile.async_open(self.filename, "w") as f:
+        async with aiofiles.open(self.filename, "w") as f:
             data = {
                 "versions": self.available_versions,
                 "timestamp": str(datetime.datetime.now().timestamp()),
@@ -98,8 +98,16 @@ class AvailableMinecraftServerVersions:
 
 
 async def copy_async(source: str, dest: str, chunk_size: int = 128 * 1024):
-    async with aiofile.async_open(source, "rb") as source_file, aiofile.async_open(
+    async def read_in_chunks(infile):
+        while True:
+            c = await infile.read(chunk_size)
+            if c:
+                yield c
+            else:
+                return
+
+    async with aiofiles.open(source, "rb") as source_file, aiofiles.open(
             dest, "wb"
     ) as dest_file:
-        async for chunk in source_file.iter_chunked(chunk_size):
+        async for chunk in read_in_chunks(source_file):
             await dest_file.write(chunk)
