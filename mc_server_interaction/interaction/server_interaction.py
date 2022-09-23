@@ -5,14 +5,15 @@ import logging
 import os
 from collections import deque
 from datetime import datetime
-from typing import Optional, Union
+from pathlib import Path
+from typing import Optional, Union, List
 
 from cached_property import cached_property_with_ttl
 from mcstatus import JavaServer
 
 from mc_server_interaction.exceptions import (
     ServerRunningException,
-    ServerNotInstalledException,
+    ServerNotInstalledException, NotAWorldFolderException,
 )
 from mc_server_interaction.interaction.models import (
     ServerStatus,
@@ -23,6 +24,7 @@ from mc_server_interaction.interaction.models import (
 )
 from mc_server_interaction.interaction.property_handler import ServerProperties
 from mc_server_interaction.interaction.server_process import ServerProcess, Callback
+from mc_server_interaction.interaction.worlds import MinecraftWorld
 
 
 class ServerCallbacks:
@@ -43,6 +45,8 @@ class MinecraftServer:
     properties: ServerProperties
     _mcstatus_server: Optional[JavaServer]
     log: deque
+    callbacks: ServerCallbacks
+    worlds: List[MinecraftWorld]
 
     def __init__(self, server_config: ServerConfig):
         self.logger = logging.getLogger(
@@ -59,6 +63,7 @@ class MinecraftServer:
         self.callbacks = ServerCallbacks()
 
         self.load_properties()
+        self.load_worlds()
 
         asyncio.create_task(self._update_loop())
 
@@ -72,6 +77,19 @@ class MinecraftServer:
     def save_properties(self):
         self.logger.debug("Saving server properties")
         self.properties.save()
+
+    def load_worlds(self):
+        self.worlds = []
+        world_path = Path(self.server_config.path) / "worlds"
+        if not world_path.is_dir():
+            return
+        for entry in world_path.iterdir():
+            if entry.is_dir():
+                try:
+                    world = MinecraftWorld(entry)
+                    self.worlds.append(world)
+                except NotAWorldFolderException:
+                    self.logger.warning(f"Directory {entry.name} is not a Minecraft world")
 
     def get_properties(self) -> ServerProperties:
         return self.properties
@@ -239,6 +257,9 @@ class MinecraftServer:
             "banned_players": banned_players,
         }
         return players_dict
+
+    def get_world(self, name: str):
+        return next(world for world in self.worlds if world.name == name)
 
     async def send_command(self, command: str):
         if self.is_online:

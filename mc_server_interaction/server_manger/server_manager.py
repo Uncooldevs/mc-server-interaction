@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import time
+from pathlib import Path
 from typing import Dict, Tuple, Optional
 
 import aiofiles
@@ -12,7 +13,7 @@ from mc_server_interaction.exceptions import ServerRunningException
 from mc_server_interaction.interaction import MinecraftServer
 from .data_store import ManagerDataStore
 from .models import WorldGenerationSettings
-from .utils import AvailableMinecraftServerVersions, copy_async
+from .utils import AvailableMinecraftServerVersions, async_copy
 from ..interaction.models import ServerConfig, ServerStatus
 from ..paths import cache_dir
 
@@ -138,22 +139,22 @@ class ServerManager:
                 and not force_redownload
         ):
             self.logger.info(f"Using cached server jar for version {version}")
-            await copy_async(
-                str(cache_dir / f"minecraft_server_{version}.jar"),
-                os.path.join(path, "server.jar"),
+            await async_copy(
+                (cache_dir / f"minecraft_server_{version}.jar"),
+                Path(os.path.join(path, "server.jar")),
             )
 
         else:
             self.logger.info(f"Downloading server jar for version {version}")
             download_url = await self.available_versions.get_download_link(version)
             async with aiohttp.ClientSession() as session:
-                filename = str(cache_dir / f"minecraft_server_{version}.jar")
+                filename = cache_dir / f"minecraft_server_{version}.jar"
                 async with aiofiles.open(filename, "wb") as f:
                     resp = await session.get(download_url)
                     async for chunk in resp.content.iter_chunked(10 * 1024):
                         await f.write(chunk)
 
-                await copy_async(filename, os.path.join(path, "server.jar"))
+                await async_copy(filename, Path(os.path.join(path, "server.jar")))
 
         await server.set_status(ServerStatus.STOPPED)
         server.server_config.installed = True
