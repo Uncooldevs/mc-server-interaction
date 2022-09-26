@@ -37,13 +37,12 @@ class ServerCallbacks:
 
 class MinecraftServer:
     logger: logging.Logger
-    process: Optional[ServerProcess]
+
     server_config: ServerConfig
     _status: ServerStatus
     properties: ServerProperties
     _mcstatus_server: Optional[JavaServer]
     log: deque
-    callbacks: ServerCallbacks
 
     def __init__(self, server_config: ServerConfig):
         self.logger = logging.getLogger(
@@ -54,7 +53,7 @@ class MinecraftServer:
             self._status = ServerStatus.STOPPED
         else:
             self._status = ServerStatus.NOT_INSTALLED
-        self.process = None
+        self.process: Optional[ServerProcess] = None
         self._mcstatus_server = None
         self.log = deque(maxlen=128)
         self.callbacks = ServerCallbacks()
@@ -284,6 +283,7 @@ class MinecraftServer:
         while True:
             if self._status not in [ServerStatus.STOPPED, ServerStatus.NOT_INSTALLED, ServerStatus.INSTALLING]:
                 if not self.is_running:
+                    self.process = None
                     await self.set_status(ServerStatus.STOPPED)
 
             for callback_name in callbacks.keys():

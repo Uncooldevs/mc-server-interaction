@@ -32,11 +32,6 @@ class Callbacks:
 
 
 class ServerProcess:
-    process: Optional[Process]
-    psutil_proc: Optional[psutil.Process]
-    callbacks = Callbacks()
-    system_metrics: dict = {}
-    num_cpus = psutil.cpu_count()
 
     async def start(self, command, cwd):
         self.process = await asyncio.create_subprocess_exec(
@@ -47,6 +42,13 @@ class ServerProcess:
             cwd=cwd,
         )
         self.psutil_proc = psutil.Process(self.process.pid)
+
+    def __init__(self):
+        self.callbacks = Callbacks()
+        self.system_metrics: dict = {}
+        self.num_cpus = psutil.cpu_count()
+        self.process = None
+        self.psutil_proc = None
 
     async def read_output(self):
         while self.is_running():
