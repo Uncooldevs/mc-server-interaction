@@ -196,6 +196,20 @@ class MinecraftServer:
         online_players = [Player(name=name, is_online=True) for name in online_players]
         return online_players
 
+    @cached_property_with_ttl(ttl=30)
+    def whitelisted_players(self):
+        whitelisted_players = []
+        whitelist_file = os.path.join(self.server_config.path, "whitelist.json")
+        if os.path.isfile(whitelist_file):
+            self.logger.debug(f"Loading whitelisted players from {whitelist_file}")
+            with open(whitelist_file, "r") as f:
+                data = json.load(f)
+            for player_data in data:
+                name = player_data["name"]
+                player = Player(name)
+                whitelisted_players.append(player)
+        return whitelisted_players
+
     @cached_property_with_ttl(ttl=10)
     def players(self):
         players = []
