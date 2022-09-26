@@ -1,7 +1,7 @@
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 
 class ServerStatus(Enum):
@@ -41,3 +41,13 @@ class ServerConfig:
     ram: int = 2048
     created_at: float = time.time()
     installed: bool = True
+
+    def set_ram(self, ram: Union[int, str]):
+
+        if isinstance(ram, str):
+            ram = int(ram)
+
+        self.ram = ram
+
+    def set_name(self, name):
+        self.name = name

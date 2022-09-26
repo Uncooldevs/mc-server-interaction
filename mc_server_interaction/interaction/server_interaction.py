@@ -97,7 +97,7 @@ class MinecraftServer:
         if not os.path.exists(jar_path):
             raise FileNotFoundError()
         self.logger.info("Starting server")
-        self.properties.save()
+        self.save_properties()
         command = [
             "java",
             f"-Xmx{self.server_config.ram}M",
@@ -126,7 +126,8 @@ class MinecraftServer:
             # kill if timeout expired
             self.logger.error("Timeout expired, killing server")
             self.kill()
-
+            await self.set_status(ServerStatus.STOPPED)
+            self.save_properties()
         else:
             self.logger.warning("Server not running")
 
