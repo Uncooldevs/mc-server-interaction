@@ -11,7 +11,6 @@ MC-Server-Interaction is a modern asyncio-based library for interacting with Min
 
 
 ## Roadmap
-- Much better cli interface
 - Interacting with worlds
 - Backup functions
 - ...
