@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from pathlib import Path
+from typing import List
 
 import aiofiles
 import aiohttp
@@ -96,6 +97,9 @@ class AvailableMinecraftServerVersions:
 
     def get_latest_version(self):
         return list(self.available_versions.keys())[0]
+
+    def get_version_list(self) -> List[str]:
+        return ["latest"] + list(self.available_versions.keys())
 
 
 class DataVersionMapping:
