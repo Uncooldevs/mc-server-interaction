@@ -20,3 +20,8 @@ class UnsupportedVersionException(MCServerInteractionException):
 
 class NotAWorldFolderException(MCServerInteractionException):
     pass
+
+
+class WorldExistsException(MCServerInteractionException):
+    pass
+
