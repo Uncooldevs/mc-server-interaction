@@ -124,7 +124,8 @@ class MinecraftServer:
         if self.is_running:
             self.logger.debug("Restarting server to change world...")
             await self.stop()
-            await asyncio.sleep(1)
+            while self.is_running:
+                await asyncio.sleep(1)
             self.logger.debug(f"Changing world to {world_name}")
             self.set_property("level-name", f"worlds/{world_name}")
             self.active_world = world
