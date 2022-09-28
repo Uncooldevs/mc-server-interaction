@@ -5,14 +5,15 @@ import logging
 import os
 from collections import deque
 from datetime import datetime
-from typing import Optional, Union
+from pathlib import Path
+from typing import Optional, Union, List
 
 from cached_property import cached_property_with_ttl
 from mcstatus import JavaServer
 
 from mc_server_interaction.exceptions import (
     ServerRunningException,
-    ServerNotInstalledException,
+    ServerNotInstalledException, NotAWorldFolderException, WorldExistsException,
 )
 from mc_server_interaction.interaction.models import (
     ServerStatus,
@@ -23,6 +24,8 @@ from mc_server_interaction.interaction.models import (
 )
 from mc_server_interaction.interaction.property_handler import ServerProperties
 from mc_server_interaction.interaction.server_process import ServerProcess, Callback
+from mc_server_interaction.interaction.worlds import MinecraftWorld
+from mc_server_interaction.server_manger.models import WorldGenerationSettings
 
 
 class ServerCallbacks:
@@ -43,6 +46,9 @@ class MinecraftServer:
     properties: ServerProperties
     _mcstatus_server: Optional[JavaServer]
     log: deque
+    callbacks: ServerCallbacks
+    worlds: List[MinecraftWorld]
+    active_world: MinecraftWorld
 
     def __init__(self, server_config: ServerConfig):
         self.logger = logging.getLogger(
@@ -59,7 +65,9 @@ class MinecraftServer:
         self.callbacks = ServerCallbacks()
 
         self.load_properties()
+        self.load_worlds()
 
+        self.callbacks.status.add_callback(self._reload_worlds)
         asyncio.create_task(self._update_loop())
 
     def load_properties(self):
@@ -73,6 +81,22 @@ class MinecraftServer:
         self.logger.debug("Saving server properties")
         self.properties.save()
 
+    def load_worlds(self):
+        world_path = Path(self.server_config.path) / "worlds"
+        self.logger.debug(f"Loading worlds from folder {str(world_path)}")
+        self.worlds = []
+        if not world_path.is_dir():
+            return
+        for entry in world_path.iterdir():
+            if entry.is_dir():
+                try:
+                    world = MinecraftWorld(entry)
+                    self.worlds.append(world)
+                except NotAWorldFolderException:
+                    self.logger.warning(f"Directory {entry.name} is not a Minecraft world")
+        self.logger.debug(f"Loaded {len(self.worlds)} worlds from {str(world_path)}")
+        self.active_world = self.get_world(self.properties.get("level-name"))
+
     def get_properties(self) -> ServerProperties:
         return self.properties
 
@@ -83,7 +107,49 @@ class MinecraftServer:
         if self._status != status:
             self.logger.debug(f"Setting server status to {status}")
             self._status = status
-            await self.callbacks.status(status.name)
+            await self.callbacks.status(status)
+
+    async def set_active_world(self, world_name: str, new: bool = False):
+        """
+        Set the world for the server. Restarts the server if it is running.
+        :param world_name: The name of the world
+        :param new: If set to True, will not check if world exits, because it does not exist yet
+        :return:
+        """
+        self.logger.debug(f"Setting world to {world_name}...")
+        world = self.get_world(world_name)
+        if world is None and not new:
+            self.logger.error("A world with this name does not exist")
+            raise NotAWorldFolderException()
+        if self.is_running:
+            self.logger.debug("Restarting server to change world...")
+            await self.stop()
+            await asyncio.sleep(1)
+            self.logger.debug(f"Changing world to {world_name}")
+            self.set_property("level-name", f"worlds/{world_name}")
+            self.active_world = world
+            await self.start()
+        else:
+            self.set_property("level-name", f"worlds/{world_name}")
+            self.active_world = world
+
+    async def create_new_world(self, world_name: str, world_generation_settings: WorldGenerationSettings):
+        """
+        Create a new world. This function does not actually creates a new world but sets all properties so that
+        the server can generate the world on next startup.
+        :param world_name: The name of the new world
+        :param world_generation_settings: The properties for world generation
+        :return:
+        """
+        self.logger.debug(f"Setting up new world {world_name}")
+        if not world_generation_settings:
+            world_generation_settings = WorldGenerationSettings()
+
+        if self.world_exits(world_name):
+            self.logger.error("A world with this name does already exist")
+            raise WorldExistsException()
+        for name, value in world_generation_settings:
+            self.properties.set(name, value)
 
     async def start(self):
         if self.is_running:
@@ -191,7 +257,6 @@ class MinecraftServer:
     def online_players(self):
         online_players = []
         if self._mcstatus_server is not None:
-            self.logger.info("Retrieving online players via query port")
             online_players = self._mcstatus_server.query().players.names
         online_players = [Player(name=name, is_online=True) for name in online_players]
         return online_players
@@ -239,6 +304,14 @@ class MinecraftServer:
             "banned_players": banned_players,
         }
         return players_dict
+
+    def get_world(self, name: str):
+        if len(self.worlds) > 0:
+            return next((world for world in self.worlds if world.name == name), None)
+        return None
+
+    def world_exits(self, name: str):
+        return self.get_world(name) is not None
 
     async def send_command(self, command: str):
         if self.is_online:
@@ -320,3 +393,7 @@ class MinecraftServer:
                     old_variables[callback_name] = value
 
             await asyncio.sleep(1)
+
+    async def _reload_worlds(self, status: ServerStatus):
+        if status == ServerStatus.RUNNING:
+            self.load_worlds()

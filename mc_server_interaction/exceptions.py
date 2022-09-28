@@ -16,3 +16,12 @@ class ServerRunningException(MCServerInteractionException):
 
 class UnsupportedVersionException(MCServerInteractionException):
     pass
+
+
+class NotAWorldFolderException(MCServerInteractionException):
+    pass
+
+
+class WorldExistsException(MCServerInteractionException):
+    pass
+
