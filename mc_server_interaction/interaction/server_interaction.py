@@ -25,7 +25,7 @@ from mc_server_interaction.interaction.models import (
 from mc_server_interaction.interaction.property_handler import ServerProperties
 from mc_server_interaction.interaction.server_process import ServerProcess, Callback
 from mc_server_interaction.interaction.worlds import MinecraftWorld
-from mc_server_interaction.server_manger.models import WorldGenerationSettings
+from mc_server_interaction.manager.models import WorldGenerationSettings
 
 
 class ServerCallbacks:
@@ -188,7 +188,7 @@ class MinecraftServer:
             await self.set_status(ServerStatus.STOPPING)
             for i in range(timeout):
                 await asyncio.sleep(1)
-                if not self.is_online:
+                if not self.is_running:
                     return
             # kill if timeout expired
             self.logger.error("Timeout expired, killing server")

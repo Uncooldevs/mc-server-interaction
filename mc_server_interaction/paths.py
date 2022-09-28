@@ -22,3 +22,5 @@ if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
+
+backup_dir = data_dir / "backups"

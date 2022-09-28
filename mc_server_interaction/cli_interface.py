@@ -10,7 +10,7 @@ import aioconsole
 from mc_server_interaction.exceptions import DirectoryNotEmptyException
 from mc_server_interaction.interaction.models import ServerStatus
 from mc_server_interaction.log import set_console_log_level
-from mc_server_interaction.server_manger import ServerManager
+from mc_server_interaction.manager import ServerManager
 
 set_console_log_level(logging.DEBUG)
 

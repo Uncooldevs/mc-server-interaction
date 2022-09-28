@@ -1,8 +1,13 @@
+import datetime
 import json
+import os
+import shutil
+from logging import getLogger
 from pathlib import Path
 
 from mc_server_interaction.exceptions import NotAWorldFolderException
-from mc_server_interaction.server_manger.utils import async_copytree
+from mc_server_interaction.paths import backup_dir
+from mc_server_interaction.manager.utils import async_copytree
 
 
 class MinecraftWorld:
@@ -12,6 +17,8 @@ class MinecraftWorld:
     type: str
 
     def __init__(self, path: Path, version: str = None):
+        self.logger = getLogger(f"MCServerInteraction.{self.__class__.__name__}:{path.name}")
+
         self.path = path
         if not self.exists():
             raise NotAWorldFolderException()
@@ -33,22 +40,34 @@ class MinecraftWorld:
         if self.path.is_dir():
             must_contain = ["level.dat", "session.lock", "playerdata", "data", "DIM1", "DIM-1", "region"]
             for entry in must_contain:
-                if not (self.path/entry).exists():
+                if not (self.path / entry).exists():
                     return False
             return True
         return False
 
     def _load_version(self):
-        advancements_dir = (self.path/"advancements")
-        stats_dir = (self.path/"stats")
+        advancements_dir = (self.path / "advancements")
+        stats_dir = (self.path / "stats")
         for d in [advancements_dir, stats_dir]:
             if d.is_dir():
                 files = [f for f in advancements_dir.iterdir() if str(f).endswith(".json")]
                 if len(files) > 0:
-                    with open(d/files[0], "r") as f:
+                    with open(d / files[0], "r") as f:
                         data = json.load(f)
                     if type(data.get("DataVersion")) is int:
                         break
+
+    def backup(self, target_path: str):
+        shutil.make_archive(
+            target_path, "zip",
+            str(self.path)
+        )
+
+    def restore_backup(self, zip_path):
+        if self.path.is_dir():
+            shutil.rmtree(str(self.path))
+
+        shutil.unpack_archive(zip_path, self.path, "zip")
 
     async def copy_to(self, destination: Path, override: bool = False):
         if not self.exists():

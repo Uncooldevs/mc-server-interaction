@@ -11,6 +11,7 @@ import aiohttp
 
 from mc_server_interaction.exceptions import ServerRunningException
 from mc_server_interaction.interaction import MinecraftServer
+from .backup_manager import BackupManager
 from .data_store import ManagerDataStore
 from .models import WorldGenerationSettings
 from .utils import AvailableMinecraftServerVersions, async_copy
@@ -30,6 +31,8 @@ class ServerManager:
         for sid, server_config in self.config.get_servers().items():
             server = MinecraftServer(server_config)
             self._servers[sid] = server
+
+        self.backup_manager = BackupManager(self._servers)
 
     async def stop_all_servers(self):
         await asyncio.gather(
