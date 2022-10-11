@@ -1,13 +1,10 @@
-import datetime
 import json
-import os
 import shutil
 from logging import getLogger
 from pathlib import Path
 
 from mc_server_interaction.exceptions import NotAWorldFolderException
-from mc_server_interaction.paths import backup_dir
-from mc_server_interaction.manager.utils import async_copytree
+from mc_server_interaction.utils.files import async_copytree
 
 
 class MinecraftWorld:
@@ -16,8 +13,8 @@ class MinecraftWorld:
     version: str
     type: str
 
-    def __init__(self, path: Path, version: str = None):
-        self.logger = getLogger(f"MCServerInteraction.{self.__class__.__name__}:{path.name}")
+    def __init__(self, path: Path, server_name: str, version: str = None):
+        self.logger = getLogger(f"MCServerInteraction.{self.__class__.__name__}:{server_name}:{path.name}")
 
         self.path = path
         if not self.exists():
