@@ -24,4 +24,3 @@ class NotAWorldFolderException(MCServerInteractionException):
 
 class WorldExistsException(MCServerInteractionException):
     pass
-

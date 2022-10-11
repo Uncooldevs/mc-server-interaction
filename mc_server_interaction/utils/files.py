@@ -14,6 +14,7 @@ async def async_copy(source: Path, dest: Path, chunk_size: int = 128 * 1024):
                 yield c
             else:
                 return
+
     logger.debug(f"Copying file {source.name} from {source} to {dest}")
     async with aiofiles.open(source, "rb") as source_file, aiofiles.open(
             dest, "wb"

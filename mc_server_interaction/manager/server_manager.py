@@ -15,9 +15,9 @@ from .backup_manager import BackupManager
 from .data_store import ManagerDataStore
 from .models import WorldGenerationSettings
 from .utils import AvailableMinecraftServerVersions
-from ..utils.files import async_copy
 from ..interaction.models import ServerConfig, ServerStatus
 from ..paths import cache_dir
+from ..utils.files import async_copy
 
 
 class ServerManager:

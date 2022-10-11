@@ -30,12 +30,12 @@ class SingleInstance(object):
             self.lockfile = lockfile
         else:
             basename = (
-                os.path.splitext(os.path.abspath(sys.argv[0]))[0]
-                .replace("/", "-")
-                .replace(":", "")
-                .replace("\\", "-")
-                + "-%s" % flavor_id
-                + ".lock"
+                    os.path.splitext(os.path.abspath(sys.argv[0]))[0]
+                    .replace("/", "-")
+                    .replace(":", "")
+                    .replace("\\", "-")
+                    + "-%s" % flavor_id
+                    + ".lock"
             )
             self.lockfile = os.path.normpath(f"{tempfile.gettempdir()}/{basename}")
 

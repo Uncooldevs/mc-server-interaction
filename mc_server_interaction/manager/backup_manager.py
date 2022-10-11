@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 from dataclasses import dataclass
 from datetime import datetime
 from logging import getLogger
@@ -33,7 +32,6 @@ class Backup:
             version=data["version"],
             path=data["path"]
         )
-
 
 
 class BackupManager:

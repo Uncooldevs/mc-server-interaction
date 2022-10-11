@@ -43,7 +43,6 @@ class ServerConfig:
     installed: bool = True
 
     def set_ram(self, ram: Union[int, str]):
-
         if isinstance(ram, str):
             ram = int(ram)
 
