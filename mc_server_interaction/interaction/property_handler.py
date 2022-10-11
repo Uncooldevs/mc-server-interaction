@@ -7,9 +7,9 @@ class ServerProperties:
     logger: logging.Logger
     __data: dict
 
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: str, server_name: str):
         self.logger = logging.getLogger(
-            f"MCServerInteraction.{self.__class__.__name__}"
+            f"MCServerInteraction.{self.__class__.__name__}:{server_name}"
         )
         self.file_name = file_name
         self.__data = {}
@@ -57,4 +57,4 @@ class ServerProperties:
                 else:
                     value = str(raw_value)
                 f.write(f"{key}={value}\n")
-        self.logger.debug("Saved server properties")
+        self.logger.debug(f"Saved {len(self.__data)} server properties")

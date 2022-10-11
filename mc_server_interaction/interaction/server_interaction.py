@@ -75,7 +75,7 @@ class MinecraftServer:
         self.logger.debug(
             f"Attempting to load server properties from {properties_file}"
         )
-        self.properties = ServerProperties(properties_file)
+        self.properties = ServerProperties(properties_file, self.name)
 
     def save_properties(self):
         self.logger.debug("Saving server properties")
@@ -90,7 +90,7 @@ class MinecraftServer:
         for entry in world_path.iterdir():
             if entry.is_dir():
                 try:
-                    world = MinecraftWorld(entry)
+                    world = MinecraftWorld(entry, server_name=self.name)
                     self.worlds.append(world)
                 except NotAWorldFolderException:
                     self.logger.warning(f"Directory {entry.name} is not a Minecraft world")
@@ -173,13 +173,17 @@ class MinecraftServer:
             jar_path,
             "--nogui",
         ]
-        self.process = ServerProcess()
+        self.process = ServerProcess(self.name)
         await self.process.start(command, self.server_config.path)
         self.logger.debug("Create asyncio task for stdout callback")
         asyncio.create_task(self.process.read_output())
 
         self.process.callbacks.stdout.add_callback(self._update_status_callback)
         await self.set_status(ServerStatus.STARTING)
+
+    @property
+    def name(self):
+        return self.server_config.name
 
     async def stop(self, timeout=60):
         if self.is_online:

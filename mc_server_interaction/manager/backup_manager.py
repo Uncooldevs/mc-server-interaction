@@ -47,6 +47,7 @@ class BackupManager:
         print(self.backups)
 
     def load_backups(self):
+        self.logger.info("Loading backup file")
         try:
             with open(self.file_name, "r") as f:
                 backups = json.load(f)
@@ -71,7 +72,7 @@ class BackupManager:
     async def create_backup(self, sid: str, world_name):
         server = self.servers[sid]
         if server.is_running and server.active_world.name == world_name:
-            self.logger.info("Stopping server to create backup")
+            self.logger.info("Waiting for server to shutdown to create backup")
             await server.stop()
             while server.is_running:
                 await asyncio.sleep(1)

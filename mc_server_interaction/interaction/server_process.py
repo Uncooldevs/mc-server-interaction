@@ -1,5 +1,5 @@
 import asyncio
-from asyncio.subprocess import Process
+import logging
 from typing import Callable, Optional
 
 import psutil
@@ -43,7 +43,8 @@ class ServerProcess:
         )
         self.psutil_proc = psutil.Process(self.process.pid)
 
-    def __init__(self):
+    def __init__(self, server_name: str):
+        self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}:{server_name}")
         self.callbacks = Callbacks()
         self.system_metrics: dict = {}
         self.num_cpus = psutil.cpu_count()
@@ -63,6 +64,7 @@ class ServerProcess:
         self.psutil_proc = None
 
     def kill(self):
+        self.logger.info("Killing process")
         self.process.kill()
         self.psutil_proc = None
 

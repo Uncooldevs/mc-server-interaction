@@ -14,7 +14,8 @@ from mc_server_interaction.interaction import MinecraftServer
 from .backup_manager import BackupManager
 from .data_store import ManagerDataStore
 from .models import WorldGenerationSettings
-from .utils import AvailableMinecraftServerVersions, async_copy
+from .utils import AvailableMinecraftServerVersions
+from ..utils.files import async_copy
 from ..interaction.models import ServerConfig, ServerStatus
 from ..paths import cache_dir
 
@@ -26,7 +27,7 @@ class ServerManager:
     config: ManagerDataStore
 
     def __init__(self):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger(f"MCServerInteraction.{self.__class__.__name__}")
         self.config = ManagerDataStore()
         for sid, server_config in self.config.get_servers().items():
             server = MinecraftServer(server_config)
@@ -35,6 +36,7 @@ class ServerManager:
         self.backup_manager = BackupManager(self._servers)
 
     async def stop_all_servers(self):
+        self.logger.info("Stopping all running servers")
         await asyncio.gather(
             *[server.stop() for server in self._servers.values() if server.is_running]
         )
@@ -55,6 +57,7 @@ class ServerManager:
         if server.is_running:
             raise ServerRunningException()
 
+        self.logger.info(f"Deleting server {server.name}")
         path = server.server_config.path
         shutil.rmtree(path)
         self._servers.pop(sid)
@@ -65,8 +68,7 @@ class ServerManager:
             self,
             name,
             version,
-            world_generation_settings: Optional[WorldGenerationSettings] = None,
-            world_path: str = None,
+            world_generation_settings: Optional[WorldGenerationSettings] = None
     ) -> Tuple[str, MinecraftServer]:
         """
         Create necessary files like server.properties, eula.txt
@@ -113,15 +115,9 @@ class ServerManager:
 
         server.properties.save()
 
-        self.logger.info("Write eula file")
+        self.logger.info("Writing eula file")
         async with aiofiles.open(os.path.join(path, "eula.txt"), "w") as f:
             await f.write("eula=true")
-
-        if world_path:
-            if os.path.isdir(world_path):
-                shutil.copytree(world_path, os.path.join(path, "worlds", "world"))
-            elif not os.path.isdir(world_path):
-                self.logger.error("Given world does not exist")
 
         await server.set_status(ServerStatus.STOPPED)
         return latest_sid, server
@@ -134,6 +130,7 @@ class ServerManager:
         :return:
         """
         server = self._servers.get(sid)
+        self.logger.info(f"Installing server {server.name}")
         await server.set_status(ServerStatus.INSTALLING)
         version = server.server_config.version
         path = server.server_config.path

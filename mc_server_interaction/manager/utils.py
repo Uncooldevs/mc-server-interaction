@@ -2,7 +2,6 @@ import datetime
 import json
 import logging
 import os
-from pathlib import Path
 from typing import List
 
 import aiofiles
@@ -72,6 +71,7 @@ class AvailableMinecraftServerVersions:
                 ] = "https://mcversions.net" + version.find("a", text="Download").get(
                     "href"
                 )
+        self.logger.debug(f"Retrieved info for {len(self.available_versions)} server versions")
         async with aiofiles.open(self.filename, "w") as f:
             data = {
                 "versions": self.available_versions,
