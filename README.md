@@ -10,12 +10,20 @@ MC-Server-Interaction is a modern asyncio-based library for interacting with Min
     - Start and stop servers
     - Send commands
 - Retrieve player information
+    - Online players
+    - OP players
+    - Banned players
+    - Whitelisted players
 - Interact with Worlds
     - Copy worlds from one server to another
     - Create and restore backups of worlds
+- Monitor system resource usage
+    - CPU
+    - RAM
 
 ## Roadmap
 
+- Extend / improve existing features
 - Bukkit servers / easy plugin installation
 - ...
 
