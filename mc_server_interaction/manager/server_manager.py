@@ -38,7 +38,7 @@ class ServerManager:
     async def stop_all_servers(self):
         self.logger.info("Stopping all running servers")
         await asyncio.gather(
-            *[server.stop() for server in self._servers.values() if server.is_running]
+            *[server.shutdown() for server in self._servers.values() if server.is_running]
         )
 
     def get_servers(self) -> Dict[str, MinecraftServer]:

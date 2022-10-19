@@ -70,10 +70,8 @@ class BackupManager:
     async def create_backup(self, sid: str, world_name):
         server = self.servers[sid]
         if server.is_running and server.active_world.name == world_name:
-            self.logger.info("Waiting for server to shutdown to create backup")
-            await server.stop()
-            while server.is_running:
-                await asyncio.sleep(1)
+            self.logger.info("Stopping server to create backup")
+            await server.shutdown()
 
         self.logger.info(f"Creating backup for {sid}: {world_name}")
         world = server.get_world(world_name)
@@ -92,9 +90,7 @@ class BackupManager:
         server = self.servers[sid]
         if server.is_running and server.active_world.name == world_name:
             self.logger.info("Stopping server to restore backup")
-            await server.stop()
-            while server.is_running:
-                await asyncio.sleep(1)
+            await server.shutdown()
         self.logger.info(f"Restoring backup for {sid}: {world_name}")
         world = server.get_world(world_name)
         world.restore_backup(backup_dir / f"{sid}_{world.name}_{datetime.now().strftime('%y-%m-%d--%H-%M-%S')}")

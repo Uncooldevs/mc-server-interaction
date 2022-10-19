@@ -123,9 +123,7 @@ class MinecraftServer:
             raise NotAWorldFolderException()
         if self.is_running:
             self.logger.debug("Restarting server to change world...")
-            await self.stop()
-            while self.is_running:
-                await asyncio.sleep(1)
+            await self.shutdown()
             self.logger.debug(f"Changing world to {world_name}")
             self.set_property("level-name", f"worlds/{world_name}")
             self.active_world = world
@@ -185,11 +183,25 @@ class MinecraftServer:
     def name(self):
         return self.server_config.name
 
-    async def stop(self, timeout=60):
+    async def stop(self):
+        """
+        Tells the server to stop and returns, there is no guarantee the server will actually stop.
+        """
         if self.is_online:
             self.logger.info("Stopping server")
             await self.process.send_input("stop")
             await self.set_status(ServerStatus.STOPPING)
+        else:
+            self.logger.warning("Server not running")
+
+    async def shutdown(self, timeout=60):
+        """
+        Same as stop, but waits for the server to shut down or kills the process
+        if the server does not shut down on its own.
+        :param timeout: The maximum time to wait in seconds before the server process will be killed.
+        """
+        if self.is_online:
+            await self.stop()
             for i in range(timeout):
                 await asyncio.sleep(1)
                 if not self.is_running:
@@ -197,6 +209,7 @@ class MinecraftServer:
             # kill if timeout expired
             self.logger.error("Timeout expired, killing server")
             self.kill()
+            await asyncio.sleep(1)
             await self.set_status(ServerStatus.STOPPED)
             self.save_properties()
         else:
@@ -363,6 +376,7 @@ class MinecraftServer:
             self._mcstatus_server = None
             self.process = None
             await self.set_status(ServerStatus.STOPPED)
+            self.save_properties()
 
     async def _update_loop(self):
         callbacks = {
