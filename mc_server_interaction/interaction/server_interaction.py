@@ -194,7 +194,7 @@ class MinecraftServer:
         else:
             self.logger.warning("Server not running")
 
-    async def shutdown(self, timeout=60):
+    async def shutdown(self, timeout=120):
         """
         Same as stop, but waits for the server to shut down or kills the process
         if the server does not shut down on its own.
