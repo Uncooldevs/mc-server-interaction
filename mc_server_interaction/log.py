@@ -42,6 +42,6 @@ def setup_logging():
 
 def set_console_log_level(level: Union[str, int]):
     for handler in logger.handlers:
-        if type(handler) == logging.StreamHandler:
+        if type(handler) is logging.StreamHandler:
             handler.setLevel(level)
             break
