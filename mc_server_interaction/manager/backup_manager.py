@@ -3,6 +3,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from logging import getLogger
+from pathlib import Path
 from typing import Dict
 
 from mc_server_interaction.interaction import MinecraftServer
@@ -16,6 +17,7 @@ class Backup:
     world: str
     version: str
     path: str
+    size: int = 0
 
     @property
     def __dict__(self):
@@ -24,7 +26,8 @@ class Backup:
             "time": self.time.timestamp(),
             "world": self.world,
             "version": self.version,
-            "path": self.path
+            "path": self.path,
+            "size": self.size
         }
 
     @classmethod
@@ -34,7 +37,8 @@ class Backup:
             time=datetime.fromtimestamp(data["time"]),
             world=data["world"],
             version=data["version"],
-            path=data["path"]
+            path=data["path"],
+            size=data.get("size", 0)
         )
 
 
@@ -81,9 +85,10 @@ class BackupManager:
         bid = str(uuid.uuid4().hex)
         file_name = str(backup_dir / f"{str(bid)}.zip")
         world.backup(str(backup_dir / bid))
+        size = Path(file_name).stat().st_size
 
         self.backups[bid] = Backup(
-            sid, datetime.now(), world_name, server.server_config.version, file_name
+            sid, datetime.now(), world_name, server.server_config.version, file_name, size
         )
         self.save_backup_file()
 
