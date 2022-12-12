@@ -95,7 +95,7 @@ class MinecraftServer:
                 except NotAWorldFolderException:
                     self.logger.warning(f"Directory {entry.name} is not a Minecraft world")
         self.logger.debug(f"Loaded {len(self.worlds)} worlds from {str(world_path)}")
-        self.active_world = self.get_world(self.properties.get("level-name"))
+        self.active_world = self.get_world(self.properties.get("level-name").replace("worlds/", ""))
 
     def get_properties(self) -> ServerProperties:
         return self.properties

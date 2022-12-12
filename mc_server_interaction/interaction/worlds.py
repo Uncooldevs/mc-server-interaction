@@ -68,6 +68,7 @@ class MinecraftWorld:
             shutil.rmtree(str(self.path))
 
         shutil.unpack_archive(zip_path, self.path, "zip")
+        self.logger.info("Backup archive unpacked")
 
     async def copy_to(self, destination: Path, override: bool = False):
         self.logger.debug(f"Copying world to path {destination}")

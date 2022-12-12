@@ -1,10 +1,13 @@
 import json
+import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from typing import Dict
+
+import aiofiles
 
 from mc_server_interaction.interaction import MinecraftServer
 from mc_server_interaction.paths import backup_dir, data_dir
@@ -102,7 +105,23 @@ class BackupManager:
             await server.shutdown()
         self.logger.info(f"Restoring backup for {backup.sid}: {backup.world}")
         world = server.get_world(backup.world)
+
+        restart = False
+        if server.active_world.name == world.name:
+            await server.shutdown()
+            restart = True
+
         world.restore_backup(backup_dir / f"{bid}.zip")
+        if restart:
+            await server.start()
+
+    def delete_backup(self, bid: str):
+        backup = self.backups.pop(bid)
+        if backup is None:
+            return
+
+        os.remove(backup.path)
+        self.save_backup_file()
 
     def get_backup(self, bid: str):
         return self.backups.get(bid, None)
